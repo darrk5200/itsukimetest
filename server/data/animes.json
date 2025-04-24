@@ -1,0 +1,265 @@
+[
+  {
+    "id": 1,
+    "anime_name": "Erased",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BZWQ2YmI5NWMtZTY2Mi00MGUxLWFhMmEtYjVjZjMwOTNkOThjXkEyXkFqcGc@._V1_.jpg",
+    "episode_count": 12,
+    "genres": ["Mystery", "Thriller", "Supernatural", "Drama"],
+    "description": "Satoru Fujinuma is a struggling manga artist who has the ability to turn back time and prevent deaths. When his mother is killed, he accidentally time-leaps back to his childhood, where he tries to prevent the abduction and killing of his classmate.",
+    "episodes": [
+      {
+        "id": 101,
+        "episode_number": 1,
+        "title": "Flashing Back",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1440
+      },
+      {
+        "id": 102,
+        "episode_number": 2,
+        "title": "Palm of the Hand",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1425
+      },
+      {
+        "id": 103,
+        "episode_number": 3,
+        "title": "Birthmark",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1462
+      },
+      {
+        "id": 104,
+        "episode_number": 4,
+        "title": "Accomplishment",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1430
+      },
+      {
+        "id": 105,
+        "episode_number": 5,
+        "title": "Getaway",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1452
+      },
+      {
+        "id": 106,
+        "episode_number": 6,
+        "title": "Grim Reaper",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1445
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "anime_name": "Demon Slayer",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGdeQXVyNjc3MjQzNTI@._V1_.jpg",
+    "episode_count": 26,
+    "genres": ["Action", "Fantasy", "Adventure", "Supernatural"],
+    "description": "Tanjiro Kamado and his friends from the Demon Slayer Corps accompany Kyojuro Rengoku, the Flame Hashira, to investigate a mysterious series of disappearances on a train.",
+    "episodes": [
+      {
+        "id": 201,
+        "episode_number": 1,
+        "title": "Cruel",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGdeQXVyNjc3MjQzNTI@._V1_.jpg",
+        "duration": 1420
+      },
+      {
+        "id": 202,
+        "episode_number": 2,
+        "title": "Trainer Sakonji Urokodaki",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGdeQXVyNjc3MjQzNTI@._V1_.jpg",
+        "duration": 1435
+      },
+      {
+        "id": 203,
+        "episode_number": 3,
+        "title": "Sabito and Makomo",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGdeQXVyNjc3MjQzNTI@._V1_.jpg",
+        "duration": 1430
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "anime_name": "Attack on Titan",
+    "coverpage": "https://flxt.tmsimg.com/assets/p10701949_b_v8_ah.jpg",
+    "episode_count": 87,
+    "genres": ["Action", "Drama", "Fantasy", "Mystery"],
+    "description": "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
+    "episodes": [
+      {
+        "id": 301,
+        "episode_number": 1,
+        "title": "To You, 2000 Years From Now",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "thumbnail": "https://flxt.tmsimg.com/assets/p10701949_b_v8_ah.jpg",
+        "duration": 1450
+      },
+      {
+        "id": 302,
+        "episode_number": 2,
+        "title": "That Day",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "thumbnail": "https://flxt.tmsimg.com/assets/p10701949_b_v8_ah.jpg",
+        "duration": 1445
+      },
+      {
+        "id": 303,
+        "episode_number": 3,
+        "title": "A Dim Light Amid Despair",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "thumbnail": "https://flxt.tmsimg.com/assets/p10701949_b_v8_ah.jpg",
+        "duration": 1435
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "anime_name": "My Hero Academia",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BNzgxMzI3NzgtYzE2Zi00MzlmLThlNWEtNWVmZWEyZjNkZWYyXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "episode_count": 113,
+    "genres": ["Action", "Comedy", "Superhero", "School"],
+    "description": "A superhero-loving boy without any powers is determined to enroll in a prestigious hero academy and learn what it really means to be a hero.",
+    "episodes": [
+      {
+        "id": 401,
+        "episode_number": 1,
+        "title": "Izuku Midoriya: Origin",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BNmQzYmE2MGEtZjk4YS00YmVjLWEwZWMtODRkZDFkMWJkM2M2XkEyXkFqcGdeQXVyMTQ3MjMyMTYz._V1_.jpg",
+        "duration": 1420
+      },
+      {
+        "id": 402,
+        "episode_number": 2,
+        "title": "What It Takes to Be a Hero",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BNmQzYmE2MGEtZjk4YS00YmVjLWEwZWMtODRkZDFkMWJkM2M2XkEyXkFqcGdeQXVyMTQ3MjMyMTYz._V1_.jpg",
+        "duration": 1425
+      },
+      {
+        "id": 403,
+        "episode_number": 3,
+        "title": "Roaring Muscles",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BNmQzYmE2MGEtZjk4YS00YmVjLWEwZWMtODRkZDFkMWJkM2M2XkEyXkFqcGdeQXVyMTQ3MjMyMTYz._V1_.jpg",
+        "duration": 1430
+      }
+    ]
+  },
+  
+  {
+    "id": 6,
+    "anime_name": "Death Note",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg",
+    "episode_count": 37,
+    "genres": ["Mystery", "Psychological", "Supernatural", "Thriller"],
+    "description": "An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook capable of killing anyone whose name is written into it.",
+    "episodes": [
+      {
+        "id": 601,
+        "episode_number": 1,
+        "title": "Rebirth",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg",
+        "duration": 1420
+      },
+      {
+        "id": 602,
+        "episode_number": 2,
+        "title": "Confrontation",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg",
+        "duration": 1435
+      },
+      {
+        "id": 603,
+        "episode_number": 3,
+        "title": "Dealings",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg",
+        "duration": 1425
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "anime_name": "Steins;Gate",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BMjUxMzE4ZDctODNjMS00MzIwLThjNDktODkwYjc5YWU0MDc0XkEyXkFqcGdeQXVyNjc3OTE4Nzk@._V1_.jpg",
+    "episode_count": 24,
+    "genres": ["Sci-Fi", "Thriller", "Drama", "Psychological"],
+    "description": "A group of friends create a device that can send messages to the past, inadvertently changing the timeline and causing a series of unexpected consequences.",
+    "episodes": [
+      {
+        "id": 701,
+        "episode_number": 1,
+        "title": "Turning Point",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMjUxMzE4ZDctODNjMS00MzIwLThjNDktODkwYjc5YWU0MDc0XkEyXkFqcGdeQXVyNjc3OTE4Nzk@._V1_.jpg",
+        "duration": 1430
+      },
+      {
+        "id": 702,
+        "episode_number": 2,
+        "title": "Time Travel Paranoia",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMjUxMzE4ZDctODNjMS00MzIwLThjNDktODkwYjc5YWU0MDc0XkEyXkFqcGdeQXVyNjc3OTE4Nzk@._V1_.jpg",
+        "duration": 1425
+      },
+      {
+        "id": 703,
+        "episode_number": 3,
+        "title": "Butterfly Effect",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMjUxMzE4ZDctODNjMS00MzIwLThjNDktODkwYjc5YWU0MDc0XkEyXkFqcGdeQXVyNjc3OTE4Nzk@._V1_.jpg",
+        "duration": 1435
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "anime_name": "One Punch Man",
+    "coverpage": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
+    "episode_count": 24,
+    "genres": ["Action", "Comedy", "Superhero", "Parody"],
+    "description": "The story of Saitama, a hero who can defeat any opponent with a single punch but seeks a worthy opponent after growing bored by a lack of challenge.",
+    "episodes": [
+      {
+        "id": 801,
+        "episode_number": 1,
+        "title": "The Strongest Man",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
+        "duration": 1420
+      },
+      {
+        "id": 802,
+        "episode_number": 2,
+        "title": "The Lone Cyborg",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
+        "duration": 1425
+      },
+      {
+        "id": 803,
+        "episode_number": 3,
+        "title": "The Obsessive Scientist",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+        "thumbnail": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
+        "duration": 1430
+      }
+    ]
+  }
+]
