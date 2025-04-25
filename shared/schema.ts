@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, array, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,8 +8,11 @@ export const animes = pgTable("animes", {
   anime_name: text("anime_name").notNull(),
   coverpage: text("coverpage").notNull(),
   episode_count: integer("episode_count").notNull(),
-  genres: array(text("genres")).notNull(),
+  releasedEpisodes: integer("released_episodes").notNull(),
+  releaseDate: text("release_date").notNull(),
+  genres: text("genres").array().notNull(),
   description: text("description").notNull(),
+  lastEpisodeTimestamp: text("last_episode_timestamp"),
   episodes: jsonb("episodes").notNull(),
 });
 
@@ -27,8 +30,11 @@ export const animeSchema = z.object({
   anime_name: z.string(),
   coverpage: z.string(),
   episode_count: z.number(),
+  releasedEpisodes: z.number(),
+  releaseDate: z.string(),
   genres: z.array(z.string()),
   description: z.string(),
+  lastEpisodeTimestamp: z.string().optional(),
   episodes: z.array(episodeSchema),
 });
 

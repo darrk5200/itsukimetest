@@ -4,14 +4,17 @@
     "anime_name": "Erased",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BZWQ2YmI5NWMtZTY2Mi00MGUxLWFhMmEtYjVjZjMwOTNkOThjXkEyXkFqcGc@._V1_.jpg",
     "episode_count": 12,
+    "releasedEpisodes": 7,
+    "releaseDate": "2016-01-08",
     "genres": ["Mystery", "Thriller", "Supernatural", "Drama"],
     "description": "Satoru Fujinuma is a struggling manga artist who has the ability to turn back time and prevent deaths. When his mother is killed, he accidentally time-leaps back to his childhood, where he tries to prevent the abduction and killing of his classmate.",
+    "lastEpisodeTimestamp": "2025-04-25T21:30:00",
     "episodes": [
       {
         "id": 101,
         "episode_number": 1,
         "title": "Flashing Back",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        "video_url": "https://www.discord.com/",
         "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
         "duration": 1440
       },
@@ -54,6 +57,14 @@
         "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
         "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
         "duration": 1445
+      },
+      {
+        "id": 107,
+        "episode_number": 7,
+        "title": "Grim Reaper",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+        "thumbnail": "https://static.tvtropes.org/pmwiki/pub/images/erased_poster.jpg",
+        "duration": 1445
       }
     ]
   },
@@ -62,8 +73,11 @@
     "anime_name": "Demon Slayer",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGdeQXVyNjc3MjQzNTI@._V1_.jpg",
     "episode_count": 26,
+    "releasedEpisodes": 3,
+    "releaseDate": "2019-04-06",
     "genres": ["Action", "Fantasy", "Adventure", "Supernatural"],
     "description": "Tanjiro Kamado and his friends from the Demon Slayer Corps accompany Kyojuro Rengoku, the Flame Hashira, to investigate a mysterious series of disappearances on a train.",
+    "lastEpisodeTimestamp": "2024-04-24T10:15:00Z",
     "episodes": [
       {
         "id": 201,
@@ -96,8 +110,11 @@
     "anime_name": "Attack on Titan",
     "coverpage": "https://flxt.tmsimg.com/assets/p10701949_b_v8_ah.jpg",
     "episode_count": 87,
+    "releasedEpisodes": 3,
+    "releaseDate": "2013-04-07",
     "genres": ["Action", "Drama", "Fantasy", "Mystery"],
     "description": "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
+    "lastEpisodeTimestamp": "2024-04-23T08:45:00Z",
     "episodes": [
       {
         "id": 301,
@@ -130,8 +147,11 @@
     "anime_name": "My Hero Academia",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BNzgxMzI3NzgtYzE2Zi00MzlmLThlNWEtNWVmZWEyZjNkZWYyXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
     "episode_count": 113,
+    "releasedEpisodes": 3,
+    "releaseDate": "2016-04-03",
     "genres": ["Action", "Comedy", "Superhero", "School"],
     "description": "A superhero-loving boy without any powers is determined to enroll in a prestigious hero academy and learn what it really means to be a hero.",
+    "lastEpisodeTimestamp": "2024-04-25T09:20:00Z",
     "episodes": [
       {
         "id": 401,
@@ -165,8 +185,11 @@
     "anime_name": "Death Note",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg",
     "episode_count": 37,
+    "releasedEpisodes": 3,
+    "releaseDate": "2006-10-03",
     "genres": ["Mystery", "Psychological", "Supernatural", "Thriller"],
     "description": "An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook capable of killing anyone whose name is written into it.",
+    "lastEpisodeTimestamp": "2024-04-19T16:45:00Z",
     "episodes": [
       {
         "id": 601,
@@ -199,8 +222,11 @@
     "anime_name": "Steins;Gate",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BMjUxMzE4ZDctODNjMS00MzIwLThjNDktODkwYjc5YWU0MDc0XkEyXkFqcGdeQXVyNjc3OTE4Nzk@._V1_.jpg",
     "episode_count": 24,
+    "releasedEpisodes": 3,
+    "releaseDate": "2011-04-06",
     "genres": ["Sci-Fi", "Thriller", "Drama", "Psychological"],
     "description": "A group of friends create a device that can send messages to the past, inadvertently changing the timeline and causing a series of unexpected consequences.",
+    "lastEpisodeTimestamp": "2024-04-21T14:30:00Z",
     "episodes": [
       {
         "id": 701,
@@ -233,8 +259,11 @@
     "anime_name": "One Punch Man",
     "coverpage": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
     "episode_count": 24,
+    "releasedEpisodes": 3,
+    "releaseDate": "2015-10-05",
     "genres": ["Action", "Comedy", "Superhero", "Parody"],
     "description": "The story of Saitama, a hero who can defeat any opponent with a single punch but seeks a worthy opponent after growing bored by a lack of challenge.",
+    "lastEpisodeTimestamp": "2024-04-18T11:35:00Z",
     "episodes": [
       {
         "id": 801,

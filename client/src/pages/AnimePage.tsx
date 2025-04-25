@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
-import { Play, Plus, ChevronDown } from 'lucide-react';
+import { Play, Clock, CheckCircle2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { EpisodeList } from '@/components/EpisodeItem';
 import { AnimeListGrid } from '@/components/AnimeCard';
+import { useToast } from '@/hooks/use-toast';
 import { Anime, Episode, WatchHistoryItem } from '@/lib/types';
-import { getWatchHistory } from '@/lib/storage';
+import { getWatchHistory, isInWatchLater, toggleWatchLater } from '@/lib/storage';
 import { getRandomItemsFromArray } from '@/lib/utils';
 
 interface AnimePageProps {
@@ -21,6 +22,7 @@ export default function AnimePage({ params }: AnimePageProps) {
   const animeId = params.id ? parseInt(params.id) : undefined;
   const episodeId = params.episodeId ? parseInt(params.episodeId) : undefined;
   const [location, navigate] = useLocation();
+  const { toast } = useToast();
   
   // Fetch anime details
   const { isLoading, data: anime } = useQuery({
@@ -38,6 +40,9 @@ export default function AnimePage({ params }: AnimePageProps) {
   
   // Similar animes
   const [similarAnimes, setSimilarAnimes] = useState<Anime[]>([]);
+  
+  // Watch Later state
+  const [inWatchLater, setInWatchLater] = useState(animeId ? isInWatchLater(animeId) : false);
   
   // Handle episode change
   useEffect(() => {
@@ -147,6 +152,16 @@ export default function AnimePage({ params }: AnimePageProps) {
                 ))}
               </div>
               <p className="text-muted-foreground mb-4 max-w-3xl">{anime.description}</p>
+              
+              <div className="flex flex-wrap gap-6 mb-4 text-sm text-muted-foreground">
+                <div>
+                  <span className="font-semibold">Release Date:</span> {new Date(anime.releaseDate).toLocaleDateString()}
+                </div>
+                <div>
+                  <span className="font-semibold">Episodes:</span> <span className="text-primary font-medium">{anime.releasedEpisodes}</span>/{anime.episode_count}
+                </div>
+              </div>
+              
               <div className="flex items-center gap-4">
                 <Button className="flex items-center bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-full" asChild>
                   <Link href={`/anime/${anime.id}/episode/${anime.episodes[0].id}`}>
@@ -154,9 +169,32 @@ export default function AnimePage({ params }: AnimePageProps) {
                     Watch Now
                   </Link>
                 </Button>
-                <Button variant="outline" className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-6 py-2 rounded-full">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Add to List
+                <Button 
+                  variant="outline" 
+                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-6 py-2 rounded-full"
+                  onClick={() => {
+                    const added = toggleWatchLater(anime.id);
+                    setInWatchLater(added);
+                    toast({
+                      title: added ? "Added to Watch Later" : "Removed from Watch Later",
+                      description: added 
+                        ? `${anime.anime_name} has been added to your Watch Later list` 
+                        : `${anime.anime_name} has been removed from your Watch Later list`,
+                      duration: 2000,
+                    });
+                  }}
+                >
+                  {inWatchLater ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
+                      In Watch Later
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-5 w-5 mr-2" />
+                      Watch Later
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -223,7 +261,9 @@ export default function AnimePage({ params }: AnimePageProps) {
                     </div>
                     <div className="p-2 sm:p-3">
                       <h3 className="anime-title font-medium text-foreground transition-colors text-xs sm:text-base line-clamp-1">{similarAnime.anime_name}</h3>
-                      <p className="text-muted-foreground text-xs sm:text-sm">{similarAnime.episode_count} Episodes</p>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
+                        <span className="text-primary font-medium">{similarAnime.releasedEpisodes}</span>/{similarAnime.episode_count} Episodes
+                      </p>
                     </div>
                   </a>
                 </Link>

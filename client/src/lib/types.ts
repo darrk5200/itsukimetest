@@ -3,9 +3,12 @@ export interface Anime {
   anime_name: string;
   coverpage: string;
   episode_count: number;
+  releasedEpisodes: number;
+  releaseDate: string;
   genres: string[];
   description: string;
   episodes: Episode[];
+  lastEpisodeTimestamp?: string; // ISO date string for most recent episode
 }
 
 export interface Episode {
@@ -25,10 +28,7 @@ export interface WatchHistoryItem {
   lastWatched: string; // ISO date string
 }
 
-export interface SearchHistoryItem {
-  term: string;
-  timestamp: string; // ISO date string
-}
+
 
 // Navigation types
 export type SidebarSection = 'home' | 'trending' | 'subscriptions' | 'history' | 'watchlater' | 'favorites' | 'genres';

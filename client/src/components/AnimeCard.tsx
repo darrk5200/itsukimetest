@@ -1,7 +1,10 @@
 import { Link } from 'wouter';
-import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, Clock, CheckCircle2 } from 'lucide-react';
 import { Anime } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { isInWatchLater, toggleWatchLater } from '@/lib/storage';
+import { useToast } from '@/hooks/use-toast';
 import {
   Carousel,
   CarouselContent,
@@ -17,9 +20,43 @@ interface AnimeCardProps {
 }
 
 export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
+  const [inWatchLater, setInWatchLater] = useState(isInWatchLater(anime.id));
+  const { toast } = useToast();
+  
+  // Check if anime is recently added (within the last 3 days) based on lastEpisodeTimestamp
+  const isRecentlyAdded = useMemo(() => {
+    if (!anime.lastEpisodeTimestamp) return false;
+    
+    const releaseDate = new Date(anime.lastEpisodeTimestamp);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - releaseDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays <= 3; // Consider "new" if added within the last 3 days
+  }, [anime.lastEpisodeTimestamp]);
+
+  // The anime is considered new if either it's explicitly marked as new OR it was recently added
+  const showNewBadge = isNew || isRecentlyAdded;
+
   const handleClick = () => {
     // Scroll to top when anime is clicked
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleWatchLaterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const added = toggleWatchLater(anime.id);
+    setInWatchLater(added);
+    
+    toast({
+      title: added ? "Added to Watch Later" : "Removed from Watch Later",
+      description: added 
+        ? `${anime.anime_name} has been added to your Watch Later list` 
+        : `${anime.anime_name} has been removed from your Watch Later list`,
+      duration: 2000,
+    });
   };
 
   return (
@@ -43,13 +80,28 @@ export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
               <Play className="h-8 w-8" />
             </div>
           </div>
-          {isNew && (
+          {showNewBadge && (
             <span className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">NEW</span>
           )}
+          
+          {/* Watch Later button */}
+          <button 
+            className="absolute top-2 right-2 bg-background/80 p-1.5 rounded-full hover:bg-background transition-colors z-10"
+            onClick={handleWatchLaterClick}
+            aria-label={inWatchLater ? "Remove from Watch Later" : "Add to Watch Later"}
+          >
+            {inWatchLater ? (
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            ) : (
+              <Clock className="h-4 w-4" />
+            )}
+          </button>
         </div>
         <div className="p-2 sm:p-3">
           <h3 className="anime-title font-medium text-foreground transition-colors text-xs sm:text-base line-clamp-1">{anime.anime_name}</h3>
-          <p className="text-muted-foreground text-xs sm:text-sm">{anime.episode_count} Episodes</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            <span className="text-primary font-medium">{anime.releasedEpisodes}</span>/{anime.episode_count} Episodes
+          </p>
         </div>
       </div>
     </Link>

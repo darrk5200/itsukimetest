@@ -7,7 +7,7 @@ import { getFirstN, getRandomItemsFromArray, getMostRecent, getAnimesByLatestEpi
 import { apiRequest } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { getWatchHistory, getSearchHistory } from '@/lib/storage';
+import { getWatchHistory } from '@/lib/storage';
 import {
   Carousel,
   CarouselContent,
@@ -24,7 +24,7 @@ function HeroSlide({ anime }: { anime: Anime }) {
         alt={anime.anime_name} 
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent transition-all duration-500 ease-in-out"></div>
       <div className="absolute bottom-0 left-0 p-4 md:p-6">
         <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs md:text-sm mb-2 inline-block">
           FEATURED
@@ -59,12 +59,12 @@ function FeaturedCarousel({ animes }: { animes: Anime[] }) {
   const [current, setCurrent] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Auto-rotate slides every 10 seconds
+  // Auto-rotate slides every 5 seconds
   useEffect(() => {
     if (api) {
       intervalRef.current = setInterval(() => {
         api.scrollNext();
-      }, 10000);
+      }, 5000);
     }
     
     // Cleanup interval on unmount
@@ -98,12 +98,12 @@ function FeaturedCarousel({ animes }: { animes: Anime[] }) {
         opts={{
           loop: true,
           align: "start",
-          skipSnaps: false,
+          skipSnaps: false
         }}
       >
-        <CarouselContent className="transition-all">
+        <CarouselContent className="transition-all duration-200 ease-in-out">
           {animes.map((anime) => (
-            <CarouselItem key={anime.id}>
+            <CarouselItem key={anime.id} className="transition-all duration-200 ease-in-out">
               <HeroSlide anime={anime} />
             </CarouselItem>
           ))}
@@ -155,12 +155,11 @@ export default function HomePage() {
       // Set trending animes (could be based on some metric, using random for demo)
       setTrendingAnimes(getRandomItemsFromArray(animes, 5));
       
-      // Get watch history and search history for recommendations
+      // Get watch history for recommendations
       const watchHistory = getWatchHistory();
-      const searchHistory = getSearchHistory();
       
       // If no history, show random recommendations
-      if (watchHistory.length === 0 && searchHistory.length === 0) {
+      if (watchHistory.length === 0) {
         setRecommendedAnimes(getRandomItemsFromArray(animes, 5));
       } else {
         // Extract genres from watched animes
@@ -172,20 +171,10 @@ export default function HomePage() {
           anime.genres.forEach(genre => watchedGenres.add(genre));
         });
         
-        // Extract search terms
-        const searchTerms = searchHistory.map(item => item.term.toLowerCase());
-        
-        // Filter animes that match watched genres or search terms
+        // Filter animes that match watched genres
         const recommendations = animes.filter(anime => {
           // Check if any genre matches
-          const genreMatch = anime.genres.some(genre => watchedGenres.has(genre));
-          
-          // Check if anime name matches any search term
-          const nameMatch = searchTerms.some(term => 
-            anime.anime_name.toLowerCase().includes(term)
-          );
-          
-          return genreMatch || nameMatch;
+          return anime.genres.some(genre => watchedGenres.has(genre));
         });
         
         // If we have recommendations based on history, use them (up to 5); otherwise, show random
@@ -196,8 +185,13 @@ export default function HomePage() {
         }
       }
       
-      // Set recent animes (animes with the most recently added episodes)
-      setRecentAnimes(getAnimesByLatestEpisode(animes, 5));
+      // Set recent animes sorted by lastEpisodeTimestamp
+      const sortedByTimestamp = getAnimesByLatestEpisode(animes, 5);
+      console.log("Recently added anime sorted by timestamp:", sortedByTimestamp.map(a => ({
+        name: a.anime_name,
+        timestamp: a.lastEpisodeTimestamp
+      })));
+      setRecentAnimes(sortedByTimestamp);
     }
   }, [animes]);
   
@@ -230,16 +224,16 @@ export default function HomePage() {
       />
       
       <AnimeListGrid 
-        animes={recommendedAnimes} 
-        title="Recommended For You" 
-        viewAllLink="/recommended"
-      />
-      
-      <AnimeListGrid 
         animes={recentAnimes} 
         title="Recently Added" 
         viewAllLink="/recent"
         isNewTag
+      />
+      
+      <AnimeListGrid 
+        animes={recommendedAnimes} 
+        title="Recommended For You" 
+        viewAllLink="/recommended"
       />
     </div>
   );

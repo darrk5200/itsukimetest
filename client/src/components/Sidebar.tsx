@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'wouter';
-import { Home, TrendingUp, Package, History, Bookmark, Heart, ChevronDown, Menu, Search } from 'lucide-react';
+import { Home, TrendingUp, Package, History, Bookmark, Heart, ChevronDown, Menu, Search, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/hooks/use-mobile';
@@ -74,7 +74,7 @@ export function Sidebar({ className }: SidebarProps) {
           <SidebarItem href="/history" icon={<History className="h-5 w-5" />} active={location === '/history'}>
             History
           </SidebarItem>
-          <SidebarItem href="/watchlater" icon={<Bookmark className="h-5 w-5" />} active={location === '/watchlater'}>
+          <SidebarItem href="/watchlater" icon={<Clock className="h-5 w-5" />} active={location === '/watchlater'}>
             Watch Later
           </SidebarItem>
           <SidebarItem href="/favorites" icon={<Heart className="h-5 w-5" />} active={location === '/favorites'}>
@@ -172,7 +172,7 @@ export function Sidebar({ className }: SidebarProps) {
   // Desktop version
   return (
     <aside className={cn(
-      "bg-sidebar border-r border-muted w-64 h-screen overflow-y-auto flex-shrink-0 fixed top-0 left-0 z-30",
+      "bg-sidebar border-r border-muted h-screen overflow-y-auto flex-shrink-0 z-30 w-full",
       className
     )}>
       {sidebarContent}

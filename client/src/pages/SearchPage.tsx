@@ -1,88 +1,58 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AnimeCard } from '@/components/AnimeCard';
 import { Anime } from '@/lib/types';
-import { getSearchHistory, saveToSearchHistory, removeFromSearchHistory } from '@/lib/storage';
-import { debounce } from '@/lib/utils';
 
 export default function SearchPage() {
-  const [_, params] = useLocation();
-  const queryParams = new URLSearchParams(params);
+  // Properly handle location parameters
+  const [_, locationParams] = useLocation();
+  const queryParams = new URLSearchParams(locationParams);
   const initialQuery = queryParams.get('q') || '';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
   
   // Fetch all animes for search
-  const { data: animes } = useQuery({
+  const { data: animes = [] } = useQuery<Anime[]>({
     queryKey: ['/api/animes'],
   });
   
   // Filter animes based on search query
-  const filteredAnimes = animes?.filter(anime => 
+  const filteredAnimes = animes.filter((anime: Anime) => 
     anime.anime_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    anime.genres.some(genre => genre.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
-  
-  // Load search history on mount
-  useEffect(() => {
-    setSearchHistory(getSearchHistory());
-  }, []);
-  
-  // Update the URL when the search query changes
-  useEffect(() => {
-    const currentQuery = queryParams.get('q') || '';
-    // Only update if the searchQuery is different from URL query
-    if (currentQuery !== searchQuery && searchQuery.trim() !== '') {
-      saveToSearchHistory(searchQuery);
-      setSearchHistory(getSearchHistory());
-    }
-  }, [searchQuery, queryParams]);
+    anime.genres.some((genre: string) => genre.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
   
   // Update search when URL changes
   useEffect(() => {
     const newQuery = queryParams.get('q') || '';
     if (newQuery !== searchQuery) {
       setSearchQuery(newQuery);
-      if (newQuery.trim() !== '') {
-        saveToSearchHistory(newQuery);
-        setSearchHistory(getSearchHistory());
-      }
     }
-  }, [params]);
+  }, [locationParams, queryParams, searchQuery]);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       // Make sure to use the user's trimmed input directly
       const userQuery = searchQuery.trim();
-      saveToSearchHistory(userQuery);
-      setSearchHistory(getSearchHistory());
       // Update URL with search query
       window.history.pushState({}, '', `/search?q=${encodeURIComponent(userQuery)}`);
       // Force URL param update
-      const newQueryParams = new URLSearchParams(`q=${encodeURIComponent(userQuery)}`);
       queryParams.set('q', userQuery);
     }
   };
   
-  const handleRemoveHistoryItem = (term: string) => {
-    removeFromSearchHistory(term);
-    setSearchHistory(getSearchHistory());
-  };
-  
-  const handleHistoryItemClick = (term: string) => {
-    const searchTerm = term.trim();
-    setSearchQuery(searchTerm);
-    saveToSearchHistory(searchTerm);
-    // Update URL with search query when clicking a history item
-    window.history.pushState({}, '', `/search?q=${encodeURIComponent(searchTerm)}`);
+  const handleCategoryClick = (category: string) => {
+    const categoryTerm = category.trim();
+    setSearchQuery(categoryTerm);
+    // Update URL with category search
+    window.history.pushState({}, '', `/search?q=${encodeURIComponent(categoryTerm)}`);
     // Force URL param update
-    queryParams.set('q', searchTerm);
+    queryParams.set('q', categoryTerm);
   };
   
   return (
@@ -129,75 +99,39 @@ export default function SearchPage() {
             </div>
           </>
         ) : (
-          <div className="mb-8">
-            <h2 className="text-lg font-medium mb-4">Recent Searches</h2>
+          <>
+            {/* Popular Categories */}
+            <div className="mb-8">
+              <h2 className="text-lg font-medium mb-4">Popular Categories</h2>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {["Action", "Comedy", "Drama", "Fantasy", "Romance", "Sci-Fi", "Slice of Life", "Supernatural"].map(
+                  (category) => (
+                    <Button
+                      key={category}
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => handleCategoryClick(category)}
+                    >
+                      {category}
+                    </Button>
+                  )
+                )}
+              </div>
+            </div>
             
-            {searchHistory.length === 0 ? (
-              <p className="text-muted-foreground">No recent searches</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {searchHistory.map((item, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center bg-muted hover:bg-muted/80 rounded-full px-3 py-1"
-                  >
-                    <button 
-                      className="text-sm"
-                      onClick={() => handleHistoryItemClick(item.term)}
-                    >
-                      {item.term}
-                    </button>
-                    <button 
-                      className="ml-2 text-muted-foreground hover:text-foreground"
-                      onClick={() => handleRemoveHistoryItem(item.term)}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
+            {/* Top Anime */}
+            {animes && animes.length > 0 && (
+              <div>
+                <h2 className="text-lg font-medium mb-4">Top Anime</h2>
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                  {animes.slice(0, 5).map((anime) => (
+                    <AnimeCard key={anime.id} anime={anime} />
+                  ))}
+                </div>
               </div>
             )}
-          </div>
-        )}
-        
-        {/* Popular Categories */}
-        <div className="mb-8">
-          <h2 className="text-lg font-medium mb-4">Popular Categories</h2>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {["Action", "Comedy", "Drama", "Fantasy", "Romance", "Sci-Fi", "Slice of Life", "Supernatural"].map(
-              (category) => (
-                <Button
-                  key={category}
-                  variant="outline"
-                  className="justify-start"
-                  onClick={() => {
-                    const categoryTerm = category.trim();
-                    setSearchQuery(categoryTerm);
-                    saveToSearchHistory(categoryTerm);
-                    // Update URL with category search
-                    window.history.pushState({}, '', `/search?q=${encodeURIComponent(categoryTerm)}`);
-                    // Force URL param update
-                    queryParams.set('q', categoryTerm);
-                  }}
-                >
-                  {category}
-                </Button>
-              )
-            )}
-          </div>
-        </div>
-        
-        {/* Top Searched Anime */}
-        {animes && animes.length > 0 && (
-          <div>
-            <h2 className="text-lg font-medium mb-4">Top Anime</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
-              {animes.slice(0, 5).map((anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
-              ))}
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>

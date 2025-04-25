@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { AnimeListGrid } from '@/components/AnimeCard';
-import { Anime, WatchHistoryItem, SearchHistoryItem } from '@/lib/types';
+import { Anime, WatchHistoryItem } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomItemsFromArray } from '@/lib/utils';
-import { getWatchHistory, getSearchHistory } from '@/lib/storage';
+import { getWatchHistory } from '@/lib/storage';
 
 export default function RecommendedPage() {
   const { isLoading, data: animes = [] } = useQuery({
@@ -15,12 +15,11 @@ export default function RecommendedPage() {
   
   useEffect(() => {
     if (animes && animes.length > 0) {
-      // Get watch history and search history
+      // Get watch history
       const watchHistory = getWatchHistory();
-      const searchHistory = getSearchHistory();
       
       // If no history, show all animes
-      if (watchHistory.length === 0 && searchHistory.length === 0) {
+      if (watchHistory.length === 0) {
         setRecommendedAnimes(animes);
         return;
       }
@@ -34,20 +33,10 @@ export default function RecommendedPage() {
         anime.genres.forEach(genre => watchedGenres.add(genre));
       });
       
-      // Extract search terms
-      const searchTerms = searchHistory.map(item => item.term.toLowerCase());
-      
-      // Filter animes that match watched genres or search terms
+      // Filter animes that match watched genres
       const recommendations = animes.filter(anime => {
         // Check if any genre matches
-        const genreMatch = anime.genres.some(genre => watchedGenres.has(genre));
-        
-        // Check if anime name matches any search term
-        const nameMatch = searchTerms.some(term => 
-          anime.anime_name.toLowerCase().includes(term)
-        );
-        
-        return genreMatch || nameMatch;
+        return anime.genres.some(genre => watchedGenres.has(genre));
       });
       
       // If we have recommendations based on history, use them; otherwise, show all animes

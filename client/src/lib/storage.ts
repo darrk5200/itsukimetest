@@ -1,9 +1,9 @@
-import { WatchHistoryItem, SearchHistoryItem } from "./types";
+import { WatchHistoryItem } from "./types";
 
 // Local storage keys
 const WATCH_HISTORY_KEY = 'animestream_watch_history';
-const SEARCH_HISTORY_KEY = 'animestream_search_history';
 const THEME_KEY = 'animestream_theme';
+const WATCH_LATER_KEY = 'animestream_watch_later';
 
 // Watch History Functions
 export function getWatchHistory(): WatchHistoryItem[] {
@@ -66,52 +66,6 @@ export function removeFromWatchHistory(animeId: number, episodeId: number): void
   }
 }
 
-// Search History Functions
-export function getSearchHistory(): SearchHistoryItem[] {
-  try {
-    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
-    return history ? JSON.parse(history) : [];
-  } catch (error) {
-    console.error('Failed to get search history:', error);
-    return [];
-  }
-}
-
-export function saveToSearchHistory(term: string): void {
-  try {
-    const history = getSearchHistory();
-    
-    // Remove existing entry with the same term if exists
-    const filteredHistory = history.filter((item) => item.term.toLowerCase() !== term.toLowerCase());
-    
-    // Add new entry at the beginning
-    filteredHistory.unshift({
-      term,
-      timestamp: new Date().toISOString(),
-    });
-    
-    // Limit history to 20 items
-    const limitedHistory = filteredHistory.slice(0, 20);
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(limitedHistory));
-  } catch (error) {
-    console.error('Failed to save to search history:', error);
-  }
-}
-
-export function clearSearchHistory(): void {
-  localStorage.removeItem(SEARCH_HISTORY_KEY);
-}
-
-export function removeFromSearchHistory(term: string): void {
-  try {
-    const history = getSearchHistory();
-    const updatedHistory = history.filter((item) => item.term !== term);
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
-  } catch (error) {
-    console.error('Failed to remove from search history:', error);
-  }
-}
-
 // Theme
 export function getTheme(): 'dark' | 'light' {
   try {
@@ -128,5 +82,66 @@ export function setTheme(theme: 'dark' | 'light'): void {
     localStorage.setItem(THEME_KEY, theme);
   } catch (error) {
     console.error('Failed to set theme:', error);
+  }
+}
+
+// Watch Later Functions
+export function getWatchLaterList(): number[] {
+  try {
+    const watchLater = localStorage.getItem(WATCH_LATER_KEY);
+    return watchLater ? JSON.parse(watchLater) : [];
+  } catch (error) {
+    console.error('Failed to get watch later list:', error);
+    return [];
+  }
+}
+
+export function addToWatchLater(animeId: number): void {
+  try {
+    const watchLater = getWatchLaterList();
+    if (!watchLater.includes(animeId)) {
+      watchLater.push(animeId);
+      localStorage.setItem(WATCH_LATER_KEY, JSON.stringify(watchLater));
+    }
+  } catch (error) {
+    console.error('Failed to add to watch later:', error);
+  }
+}
+
+export function removeFromWatchLater(animeId: number): void {
+  try {
+    const watchLater = getWatchLaterList();
+    const updatedList = watchLater.filter(id => id !== animeId);
+    localStorage.setItem(WATCH_LATER_KEY, JSON.stringify(updatedList));
+  } catch (error) {
+    console.error('Failed to remove from watch later:', error);
+  }
+}
+
+export function toggleWatchLater(animeId: number): boolean {
+  try {
+    const watchLater = getWatchLaterList();
+    const isInList = watchLater.includes(animeId);
+    
+    if (isInList) {
+      removeFromWatchLater(animeId);
+      return false;
+    } else {
+      addToWatchLater(animeId);
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to toggle watch later:', error);
+    return false;
+  }
+}
+
+export function isInWatchLater(animeId: number): boolean {
+  try {
+    const watchLater = getWatchLaterList();
+    return watchLater.includes(animeId);
+  } catch (error) {
+    console.error('Failed to check if in watch later:', error);
+    return false;
   }
 }

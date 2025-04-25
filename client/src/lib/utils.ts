@@ -39,14 +39,18 @@ export function getMostRecent<T extends { id: number }>(array: T[], count: numbe
   return [...array].sort((a, b) => b.id - a.id).slice(0, count);
 }
 
-// Sort animes by their latest episode addition
-export function getAnimesByLatestEpisode(animes: Array<{episodes: Array<{id: number}>}>, count: number): typeof animes {
+// Sort animes by their latest episode addition using lastEpisodeTimestamp
+export function getAnimesByLatestEpisode(animes: Array<{lastEpisodeTimestamp?: string, episodes: Array<{id: number}>}>, count: number): typeof animes {
   return [...animes].sort((a, b) => {
-    // Get the highest episode ID from each anime
+    // If lastEpisodeTimestamp exists, use it for sorting
+    if (a.lastEpisodeTimestamp && b.lastEpisodeTimestamp) {
+      return new Date(b.lastEpisodeTimestamp).getTime() - new Date(a.lastEpisodeTimestamp).getTime();
+    } 
+    
+    // Fallback to episode IDs if timestamp is not available
     const latestEpisodeA = Math.max(...a.episodes.map(episode => episode.id));
     const latestEpisodeB = Math.max(...b.episodes.map(episode => episode.id));
     
-    // Sort by the latest episode ID in descending order
     return latestEpisodeB - latestEpisodeA;
   }).slice(0, count);
 }
