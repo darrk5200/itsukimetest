@@ -2,36 +2,38 @@ import { useEffect, useState } from 'react';
 import { AnimeListGrid } from '@/components/AnimeCard';
 import { Anime } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { getAnimesByLatestEpisode } from '@/lib/utils';
+import { getAnimesByLatestEpisode, isWithinDaysInGMT6 } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Clock } from 'lucide-react';
 
-// Helper function to format dates in a readable way
+// Helper function to format dates in a readable way, accounting for GMT+6 timezone
 function formatDateForDisplay(dateString: string | undefined): string {
   if (!dateString) return 'Unknown date';
   
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) {
+  // Calculate difference in days based on GMT+6 timezone
+  if (isWithinDaysInGMT6(dateString, 0)) {
     return 'Today';
-  } else if (diffDays === 1) {
+  } else if (isWithinDaysInGMT6(dateString, 1) && !isWithinDaysInGMT6(dateString, 0)) {
     return 'Yesterday';
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
+  } else if (isWithinDaysInGMT6(dateString, 7)) {
+    // Get approximate days by checking consecutive days
+    let days = 2;
+    while (!isWithinDaysInGMT6(dateString, days-1) && days < 7) {
+      days++;
+    }
+    return `${days} days ago`;
   } else {
     // Format as month day
+    const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric'
-    });
+    }) + ' (GMT+6)';
   }
 }
 
 export default function RecentPage() {
-  const { isLoading, data: animes = [] } = useQuery({
+  const { isLoading, data: animes = [] } = useQuery<Anime[]>({
     queryKey: ['/api/animes'],
     refetchOnWindowFocus: false,
   });

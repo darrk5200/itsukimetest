@@ -9,11 +9,13 @@ import { Anime } from '@/lib/types';
 
 export default function SearchPage() {
   // Properly handle location parameters
-  const [_, locationParams] = useLocation();
-  const queryParams = new URLSearchParams(locationParams);
-  const initialQuery = queryParams.get('q') || '';
+  const [locationPath] = useLocation();
   
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  // Get the initial search query from the URL
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    return queryParams.get('q') || '';
+  });
   
   // Fetch all animes for search
   const { data: animes = [] } = useQuery<Anime[]>({
@@ -28,56 +30,48 @@ export default function SearchPage() {
   
   // Update search when URL changes
   useEffect(() => {
-    const newQuery = queryParams.get('q') || '';
+    const newQueryParams = new URLSearchParams(window.location.search);
+    const newQuery = newQueryParams.get('q') || '';
     if (newQuery !== searchQuery) {
       setSearchQuery(newQuery);
     }
-  }, [locationParams, queryParams, searchQuery]);
+  }, [locationPath, searchQuery]);
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Make sure to use the user's trimmed input directly
-      const userQuery = searchQuery.trim();
-      // Update URL with search query
-      window.history.pushState({}, '', `/search?q=${encodeURIComponent(userQuery)}`);
-      // Force URL param update
-      queryParams.set('q', userQuery);
+  // Handle real-time search input
+  const handleSearchInput = (value: string) => {
+    setSearchQuery(value);
+    // Update URL with search query if value isn't empty
+    if (value.trim()) {
+      window.history.pushState({}, '', `/search?q=${encodeURIComponent(value)}`);
+    } else {
+      window.history.pushState({}, '', `/search`);
     }
   };
   
   const handleCategoryClick = (category: string) => {
     const categoryTerm = category.trim();
-    setSearchQuery(categoryTerm);
     // Update URL with category search
     window.history.pushState({}, '', `/search?q=${encodeURIComponent(categoryTerm)}`);
-    // Force URL param update
-    queryParams.set('q', categoryTerm);
+    // Force a state update to trigger filtering
+    setSearchQuery(categoryTerm);
   };
   
   return (
     <div className="p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSearch} className="mb-8">
+        <div className="mb-8">
           <div className="relative">
             <Input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchInput(e.target.value)}
               placeholder="Search for anime, genres..."
-              className="bg-primary/10 text-foreground pl-10 pr-12 py-6 text-lg rounded-lg border-primary/20 focus:ring-2 focus:ring-primary"
+              className="bg-primary/10 text-foreground pl-10 py-6 text-lg rounded-lg border-primary/20 focus:ring-2 focus:ring-primary"
               autoComplete="off"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-            <button 
-              type="submit" 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full hover:bg-primary/20 transition-colors"
-              aria-label="Search"
-            >
-              <Search className="h-6 w-6 text-primary" />
-            </button>
           </div>
-        </form>
+        </div>
         
         {searchQuery ? (
           <>
@@ -90,7 +84,7 @@ export default function SearchPage() {
                   <p className="text-sm text-muted-foreground">Try a different search term or browse categories</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
                   {filteredAnimes.map((anime) => (
                     <AnimeCard key={anime.id} anime={anime} />
                   ))}
@@ -124,8 +118,8 @@ export default function SearchPage() {
             {animes && animes.length > 0 && (
               <div>
                 <h2 className="text-lg font-medium mb-4">Top Anime</h2>
-                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
-                  {animes.slice(0, 5).map((anime) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                  {animes.slice(0, 10).map((anime) => (
                     <AnimeCard key={anime.id} anime={anime} />
                   ))}
                 </div>
