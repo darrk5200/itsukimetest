@@ -27,49 +27,44 @@ const TrendingPage = lazy(() => import('@/pages/TrendingPage'));
 const RecommendedPage = lazy(() => import('@/pages/RecommendedPage'));
 const RecentPage = lazy(() => import('@/pages/RecentPage'));
 const WatchLaterPage = lazy(() => import('@/pages/WatchLaterPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 import { useMediaQuery } from '@/hooks/use-mobile';
 
 function Router() {
   const isMobile = useMediaQuery("(max-width: 1024px)");
   
-  // Use ResizablePanelGroup for desktop view
+  // Desktop view with fixed sidebar
   if (!isMobile) {
     return (
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="min-h-screen"
-      >
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-          <Sidebar className="h-screen relative w-full" />
-        </ResizablePanel>
+      <div className="flex min-h-screen">
+        {/* Fixed sidebar */}
+        <Sidebar />
         
-        <ResizableHandle withHandle />
-        
-        <ResizablePanel defaultSize={80}>
-          <main className="flex-1">
-            <Header />
-            
-            <Suspense fallback={<LoadingSkeleton />}>
-              <Switch>
-                <Route path="/" component={HomePage} />
-                <Route path="/anime/:id" component={AnimePage} />
-                <Route path="/anime/:id/episode/:episodeId" component={AnimePage} />
-                <Route path="/history" component={HistoryPage} />
-                <Route path="/search" component={SearchPage} />
-                <Route path="/trending" component={TrendingPage} />
-                <Route path="/recommended" component={RecommendedPage} />
-                <Route path="/recent" component={RecentPage} />
-                <Route path="/subscriptions" component={HomePage} />
-                <Route path="/watchlater" component={WatchLaterPage} />
-                <Route path="/favorites" component={HistoryPage} />
-                {/* Fallback to 404 */}
-                <Route component={NotFound} />
-              </Switch>
-            </Suspense>
-          </main>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        {/* Main content with margin to prevent overlap with sidebar */}
+        <main className="flex-1 ml-64">
+          <Header />
+          
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Switch>
+              <Route path="/" component={HomePage} />
+              <Route path="/anime/:id" component={AnimePage} />
+              <Route path="/anime/:id/episode/:episodeId" component={AnimePage} />
+              <Route path="/history" component={HistoryPage} />
+              <Route path="/search" component={SearchPage} />
+              <Route path="/trending" component={TrendingPage} />
+              <Route path="/recommended" component={RecommendedPage} />
+              <Route path="/recent" component={RecentPage} />
+              <Route path="/subscriptions" component={HomePage} />
+              <Route path="/watchlater" component={WatchLaterPage} />
+              <Route path="/favorites" component={HistoryPage} />
+              <Route path="/profile" component={ProfilePage} />
+              {/* Fallback to 404 */}
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </main>
+      </div>
     );
   }
   
@@ -94,6 +89,7 @@ function Router() {
             <Route path="/subscriptions" component={HomePage} />
             <Route path="/watchlater" component={WatchLaterPage} />
             <Route path="/favorites" component={HistoryPage} />
+            <Route path="/profile" component={ProfilePage} />
             {/* Fallback to 404 */}
             <Route component={NotFound} />
           </Switch>

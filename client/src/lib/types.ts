@@ -35,3 +35,23 @@ export type SidebarSection = 'home' | 'trending' | 'subscriptions' | 'history' |
 
 // Theme
 export type ThemeMode = 'dark' | 'light';
+
+export interface Notification {
+  id: string;
+  animeId: number;
+  animeName: string;
+  message: string;
+  timestamp: string; // ISO date string
+  episodeId?: number;
+  read: boolean;
+}
+
+export interface Comment {
+  id: string;
+  animeId: number;
+  episodeId: number;
+  userName: string;
+  text: string;
+  timestamp: string; // ISO date string
+  likes: number;
+}

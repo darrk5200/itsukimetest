@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
-import { Search, Bell, User, Menu, Home, TrendingUp, Clock, History as HistoryIcon } from 'lucide-react';
+import { Search, User, Menu, Home, TrendingUp, Clock, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { NotificationList } from '@/components/NotificationList';
 
 export function Header() {
   const [location] = useLocation();
@@ -78,14 +79,18 @@ export function Header() {
         </div>
         
         <div className="flex items-center ml-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-            <Bell className="h-6 w-6" />
-            <span className="sr-only">Notifications</span>
-          </Button>
-          <Button variant="ghost" size="icon" className="ml-2 text-muted-foreground hover:text-primary">
-            <User className="h-6 w-6" />
-            <span className="sr-only">User Account</span>
-          </Button>
+          <NotificationList />
+          <Link href="/profile">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="ml-2 text-muted-foreground hover:text-primary"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <User className="h-6 w-6" />
+              <span className="sr-only">User Profile</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

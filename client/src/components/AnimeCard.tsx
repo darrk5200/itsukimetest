@@ -1,9 +1,9 @@
 import { Link } from 'wouter';
-import { Play, ChevronLeft, ChevronRight, Clock, CheckCircle2 } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, Clock, CheckCircle2, Bell } from 'lucide-react';
 import { Anime } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { isInWatchLater, toggleWatchLater } from '@/lib/storage';
+import { cn, isWithinDaysInGMT6 } from '@/lib/utils';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { isInWatchLater, toggleWatchLater, isInNotify, toggleNotify, addNotification } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import {
   Carousel,
@@ -19,20 +19,18 @@ interface AnimeCardProps {
   className?: string;
 }
 
-export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
+function AnimeCardComponent({ anime, isNew = false, className }: AnimeCardProps) {
   const [inWatchLater, setInWatchLater] = useState(isInWatchLater(anime.id));
+  const [isNotified, setIsNotified] = useState(isInNotify(anime.id));
   const { toast } = useToast();
   
   // Check if anime is recently added (within the last 3 days) based on lastEpisodeTimestamp
+  // using GMT+6 timezone comparison
   const isRecentlyAdded = useMemo(() => {
     if (!anime.lastEpisodeTimestamp) return false;
     
-    const releaseDate = new Date(anime.lastEpisodeTimestamp);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - releaseDate.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays <= 3; // Consider "new" if added within the last 3 days
+    // Use our utility function that considers the GMT+6 timezone
+    return isWithinDaysInGMT6(anime.lastEpisodeTimestamp, 3);
   }, [anime.lastEpisodeTimestamp]);
 
   // The anime is considered new if either it's explicitly marked as new OR it was recently added
@@ -55,6 +53,35 @@ export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
       description: added 
         ? `${anime.anime_name} has been added to your Watch Later list` 
         : `${anime.anime_name} has been removed from your Watch Later list`,
+      duration: 2000,
+    });
+  };
+  
+  const handleNotifyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const added = toggleNotify(anime.id);
+    setIsNotified(added);
+    
+    // If user enables notifications, add notification for latest episode if it's new
+    if (added && anime.lastEpisodeTimestamp) {
+      // Use our GMT+6 timezone utility to check if this is a recent episode
+      if (isWithinDaysInGMT6(anime.lastEpisodeTimestamp, 3)) {
+        addNotification({
+          animeId: anime.id,
+          animeName: anime.anime_name,
+          message: `New episode ${anime.releasedEpisodes} is available to watch!`,
+          episodeId: anime.episodes[anime.releasedEpisodes - 1]?.id
+        });
+      }
+    }
+    
+    toast({
+      title: added ? "Notifications Enabled" : "Notifications Disabled",
+      description: added 
+        ? `You'll be notified about new episodes of ${anime.anime_name}` 
+        : `You won't receive notifications for ${anime.anime_name}`,
       duration: 2000,
     });
   };
@@ -96,6 +123,19 @@ export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
               <Clock className="h-4 w-4" />
             )}
           </button>
+          
+          {/* Notify button */}
+          <button 
+            className="absolute top-10 right-2 bg-background/80 p-1.5 rounded-full hover:bg-background transition-colors z-10"
+            onClick={handleNotifyClick}
+            aria-label={isNotified ? "Disable notifications" : "Enable notifications"}
+          >
+            {isNotified ? (
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            ) : (
+              <Bell className="h-4 w-4" />
+            )}
+          </button>
         </div>
         <div className="p-2 sm:p-3">
           <h3 className="anime-title font-medium text-foreground transition-colors text-xs sm:text-base line-clamp-1">{anime.anime_name}</h3>
@@ -107,6 +147,13 @@ export function AnimeCard({ anime, isNew = false, className }: AnimeCardProps) {
     </Link>
   );
 }
+
+export const AnimeCard = React.memo(AnimeCardComponent, (prevProps: AnimeCardProps, nextProps: AnimeCardProps): boolean => {
+  // Only re-render if these props change
+  return prevProps.anime.id === nextProps.anime.id && 
+         prevProps.isNew === nextProps.isNew &&
+         prevProps.className === nextProps.className;
+});
 
 interface AnimeListGridProps {
   animes: Anime[];

@@ -1,5 +1,6 @@
 /**
  * Memory optimization utilities to help reduce memory usage in the application
+ * Enhanced with additional utilities for SPA performance
  */
 
 /**
@@ -55,8 +56,11 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
     
     // Limit cache size to prevent memory leaks
     if (cache.size > 100) {
-      const firstKey = cache.keys().next().value;
-      cache.delete(firstKey);
+      const iterator = cache.keys();
+      const firstKey = iterator.next().value;
+      if (firstKey) {
+        cache.delete(firstKey);
+      }
     }
     
     return result;

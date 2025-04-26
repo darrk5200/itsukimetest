@@ -8,7 +8,7 @@
     "releaseDate": "2016-01-08",
     "genres": ["Mystery", "Thriller", "Supernatural", "Drama"],
     "description": "Satoru Fujinuma is a struggling manga artist who has the ability to turn back time and prevent deaths. When his mother is killed, he accidentally time-leaps back to his childhood, where he tries to prevent the abduction and killing of his classmate.",
-    "lastEpisodeTimestamp": "2025-04-25T21:30:00",
+    "lastEpisodeTimestamp": "2025-04-26T09:42:00",
     "episodes": [
       {
         "id": 101,
@@ -77,7 +77,7 @@
     "releaseDate": "2019-04-06",
     "genres": ["Action", "Fantasy", "Adventure", "Supernatural"],
     "description": "Tanjiro Kamado and his friends from the Demon Slayer Corps accompany Kyojuro Rengoku, the Flame Hashira, to investigate a mysterious series of disappearances on a train.",
-    "lastEpisodeTimestamp": "2024-04-24T10:15:00Z",
+    "lastEpisodeTimestamp": "2024-04-26T15:25:00+06:00",
     "episodes": [
       {
         "id": 201,
@@ -114,7 +114,7 @@
     "releaseDate": "2013-04-07",
     "genres": ["Action", "Drama", "Fantasy", "Mystery"],
     "description": "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
-    "lastEpisodeTimestamp": "2024-04-23T08:45:00Z",
+    "lastEpisodeTimestamp": "2024-04-23T14:45:00+06:00",
     "episodes": [
       {
         "id": 301,
@@ -151,7 +151,7 @@
     "releaseDate": "2016-04-03",
     "genres": ["Action", "Comedy", "Superhero", "School"],
     "description": "A superhero-loving boy without any powers is determined to enroll in a prestigious hero academy and learn what it really means to be a hero.",
-    "lastEpisodeTimestamp": "2024-04-25T09:20:00Z",
+    "lastEpisodeTimestamp": "2024-04-25T15:20:00+06:00",
     "episodes": [
       {
         "id": 401,
@@ -189,7 +189,7 @@
     "releaseDate": "2006-10-03",
     "genres": ["Mystery", "Psychological", "Supernatural", "Thriller"],
     "description": "An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook capable of killing anyone whose name is written into it.",
-    "lastEpisodeTimestamp": "2024-04-19T16:45:00Z",
+    "lastEpisodeTimestamp": "2024-04-19T22:45:00+06:00",
     "episodes": [
       {
         "id": 601,
@@ -226,7 +226,7 @@
     "releaseDate": "2011-04-06",
     "genres": ["Sci-Fi", "Thriller", "Drama", "Psychological"],
     "description": "A group of friends create a device that can send messages to the past, inadvertently changing the timeline and causing a series of unexpected consequences.",
-    "lastEpisodeTimestamp": "2024-04-21T14:30:00Z",
+    "lastEpisodeTimestamp": "2024-04-21T20:30:00+06:00",
     "episodes": [
       {
         "id": 701,
@@ -263,7 +263,7 @@
     "releaseDate": "2015-10-05",
     "genres": ["Action", "Comedy", "Superhero", "Parody"],
     "description": "The story of Saitama, a hero who can defeat any opponent with a single punch but seeks a worthy opponent after growing bored by a lack of challenge.",
-    "lastEpisodeTimestamp": "2024-04-18T11:35:00Z",
+    "lastEpisodeTimestamp": "2024-04-18T17:35:00+06:00",
     "episodes": [
       {
         "id": 801,
@@ -288,6 +288,35 @@
         "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
         "thumbnail": "https://m.media-amazon.com/images/M/MV5BMTNmZDE2NDEtNTg3MS00OTE1LThlZGUtOGZkZTg0NTUyNGVmXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg",
         "duration": 1430
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "anime_name": "Overflow",
+    "coverpage": "https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/overflow_cover.png",
+    "episode_count": 8,
+    "releasedEpisodes": 2,
+    "releaseDate": "2020-07-01",
+    "genres": ["Slice of Life"],
+    "description": "This is a young romantic comedy that won’t let you say, “it’s over!”",
+    "lastEpisodeTimestamp": "2024-04-26T13:25:00+06:00",
+    "episodes": [
+      {
+        "id": 901,
+        "episode_number": 1,
+        "title": "The Sisters",
+        "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_01.mp4",
+        "thumbnail": "https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/overflow_thumbnail_01.png",
+        "duration": 421
+      },
+      {
+        "id": 902,
+        "episode_number": 2,
+        "title": "An Apology",
+        "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_02.mp4",
+        "thumbnail": "https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/overflow_thumbnail_02.png",
+        "duration": 396
       }
     ]
   }

@@ -1,15 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
-import { Play, Clock, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Play, Clock, CheckCircle2, ChevronDown, Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { EpisodeList } from '@/components/EpisodeItem';
 import { AnimeListGrid } from '@/components/AnimeCard';
+import { CommentSection } from '@/components/CommentSection';
 import { useToast } from '@/hooks/use-toast';
 import { Anime, Episode, WatchHistoryItem } from '@/lib/types';
-import { getWatchHistory, isInWatchLater, toggleWatchLater } from '@/lib/storage';
-import { getRandomItemsFromArray } from '@/lib/utils';
+import { 
+  getWatchHistory, 
+  isInWatchLater, 
+  toggleWatchLater, 
+  isInNotify, 
+  toggleNotify, 
+  addNotification 
+} from '@/lib/storage';
+import { getRandomItemsFromArray, isWithinDaysInGMT6 } from '@/lib/utils';
+
+// Format duration in minutes to MM:SS format
+function formatDuration(minutes: number): string {
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`;
+  }
+  return `${mins}m`;
+}
 
 interface AnimePageProps {
   params: { 
@@ -25,13 +44,13 @@ export default function AnimePage({ params }: AnimePageProps) {
   const { toast } = useToast();
   
   // Fetch anime details
-  const { isLoading, data: anime } = useQuery({
+  const { isLoading, data: anime } = useQuery<Anime>({
     queryKey: [`/api/animes/${animeId}`],
     enabled: !!animeId,
   });
   
   // Fetch similar animes
-  const { data: allAnimes } = useQuery({
+  const { data: allAnimes } = useQuery<Anime[]>({
     queryKey: ['/api/animes'],
   });
   
@@ -43,6 +62,9 @@ export default function AnimePage({ params }: AnimePageProps) {
   
   // Watch Later state
   const [inWatchLater, setInWatchLater] = useState(animeId ? isInWatchLater(animeId) : false);
+  
+  // Notify state
+  const [isNotified, setIsNotified] = useState(animeId ? isInNotify(animeId) : false);
   
   // Handle episode change
   useEffect(() => {
@@ -163,11 +185,45 @@ export default function AnimePage({ params }: AnimePageProps) {
               </div>
               
               <div className="flex items-center gap-4">
-                <Button className="flex items-center bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-full" asChild>
-                  <Link href={`/anime/${anime.id}/episode/${anime.episodes[0].id}`}>
-                    <Play className="h-5 w-5 mr-2" />
-                    Watch Now
-                  </Link>
+                <Button 
+                  variant="outline" 
+                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-6 py-2 rounded-full"
+                  onClick={() => {
+                    const added = toggleNotify(anime.id);
+                    setIsNotified(added);
+                    // If user enables notifications, add notification for latest episode if it's new
+                    if (added && anime.lastEpisodeTimestamp) {
+                      // Use our GMT+6 timezone utility to check if this is a recent episode
+                      if (isWithinDaysInGMT6(anime.lastEpisodeTimestamp, 3)) {
+                        addNotification({
+                          animeId: anime.id,
+                          animeName: anime.anime_name,
+                          message: `New episode ${anime.releasedEpisodes} is available to watch!`,
+                          episodeId: anime.episodes[anime.releasedEpisodes - 1]?.id
+                        });
+                      }
+                    }
+                    
+                    toast({
+                      title: added ? "Notifications Enabled" : "Notifications Disabled",
+                      description: added 
+                        ? `You'll be notified about new episodes of ${anime.anime_name}` 
+                        : `You won't receive notifications for ${anime.anime_name}`,
+                      duration: 2000,
+                    });
+                  }}
+                >
+                  {isNotified ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
+                      Notify On
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="h-5 w-5 mr-2" />
+                      Notify
+                    </>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -205,15 +261,32 @@ export default function AnimePage({ params }: AnimePageProps) {
       {/* Video Player Section */}
       {currentEpisode && (
         <div className="p-4 md:p-6">
-          <VideoPlayer
-            src={currentEpisode.video_url}
-            poster={currentEpisode.thumbnail}
-            title={`${anime.anime_name} - Episode ${currentEpisode.episode_number}: ${currentEpisode.title}`}
-            animeId={anime.id}
-            episodeId={currentEpisode.id}
-            onEnded={handleEpisodeEnded}
-            className="mb-6"
-          />
+          {/* Episode Title and Info - Visible above the video */}
+          <div className="bg-card rounded-lg p-4 mb-6">
+            <h2 className="text-2xl font-bold">
+              Episode {currentEpisode.episode_number}: {currentEpisode.title}
+            </h2>
+          </div>
+          
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left side: Video Player (50% on desktop) */}
+            <div className="w-full lg:w-1/2">
+              <VideoPlayer
+                src={currentEpisode.video_url}
+                poster={currentEpisode.thumbnail}
+                title={`${anime.anime_name} - Episode ${currentEpisode.episode_number}: ${currentEpisode.title}`}
+                animeId={anime.id}
+                episodeId={currentEpisode.id}
+                onEnded={handleEpisodeEnded}
+                className="mb-6 lg:mb-0"
+              />
+            </div>
+            
+            {/* Right side: Additional content (50% on desktop) */}
+            <div className="w-full lg:w-1/2">
+              {/* Removed episode info card - now showing above video */}
+            </div>
+          </div>
           
           {/* Episodes List */}
           <div className="mb-8">
@@ -236,6 +309,14 @@ export default function AnimePage({ params }: AnimePageProps) {
             />
           </div>
           
+          {/* Comments Section */}
+          <div className="mb-8">
+            <CommentSection 
+              animeId={anime.id} 
+              episodeId={currentEpisode.id}
+            />
+          </div>
+          
           {/* Recommendations */}
           <div>
             <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
@@ -244,9 +325,13 @@ export default function AnimePage({ params }: AnimePageProps) {
                 <Link 
                   key={similarAnime.id} 
                   href={`/anime/${similarAnime.id}`}
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
-                  <a className="anime-card bg-card rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
+                  <div 
+                    className="anime-card bg-card rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105 cursor-pointer"
+                    onClick={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
                     <div className="relative">
                       <img 
                         src={similarAnime.coverpage} 
@@ -265,7 +350,7 @@ export default function AnimePage({ params }: AnimePageProps) {
                         <span className="text-primary font-medium">{similarAnime.releasedEpisodes}</span>/{similarAnime.episode_count} Episodes
                       </p>
                     </div>
-                  </a>
+                  </div>
                 </Link>
               ))}
             </div>

@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Play, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Episode } from '@/lib/types';
 import { cn, formatDuration } from '@/lib/utils';
-import { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -13,36 +13,59 @@ interface EpisodeItemProps {
   className?: string;
 }
 
-export function EpisodeItem({ episode, animeId, isActive = false, className }: EpisodeItemProps) {
+function EpisodeItemComponent({ episode, animeId, isActive = false, className }: EpisodeItemProps) {
+  const [, navigate] = useLocation();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/anime/${animeId}/episode/${episode.id}`);
+    // Scroll to top for better user experience
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
+  };
+  
   return (
-    <Link href={`/anime/${animeId}/episode/${episode.id}`}>
-      <div className={cn(
+    <div 
+      className={cn(
         "episode-item border border-muted rounded-lg overflow-hidden transition-colors hover:border-primary cursor-pointer",
         isActive && "active",
         className
-      )}>
-        <div className="relative">
-          <img 
-            src={episode.thumbnail} 
-            alt={`Episode ${episode.episode_number}`} 
-            className="w-full aspect-video object-cover" 
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <Play className="h-10 w-10 text-white" />
-          </div>
-          <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-1 rounded">
-            {formatDuration(episode.duration)}
-          </div>
+      )}
+      onClick={handleClick}
+    >
+      <div className="relative">
+        <img 
+          src={episode.thumbnail} 
+          alt={`Episode ${episode.episode_number}`} 
+          className="w-full aspect-video object-cover" 
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-40 hover:bg-opacity-20 transition-all flex items-center justify-center">
+          <Play className="h-10 w-10 text-white" />
         </div>
-        <div className="p-1 sm:p-2">
-          <div className="text-xs sm:text-sm font-medium">Ep {episode.episode_number}</div>
-          <div className="text-xs text-muted-foreground truncate">{episode.title}</div>
+        <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-1 rounded">
+          {formatDuration(episode.duration)}
         </div>
       </div>
-    </Link>
+      <div className="p-1 sm:p-2">
+        <div className="text-xs sm:text-sm font-medium">Ep {episode.episode_number}</div>
+        <div className="text-xs text-muted-foreground truncate">{episode.title}</div>
+      </div>
+    </div>
   );
 }
+
+// Prevent unnecessary re-renders with comparison function
+const episodeItemPropsAreEqual = (prevProps: EpisodeItemProps, nextProps: EpisodeItemProps): boolean => {
+  return prevProps.episode.id === nextProps.episode.id && 
+         prevProps.animeId === nextProps.animeId &&
+         prevProps.isActive === nextProps.isActive;
+};
+
+// Create a memoized component first (to fix the circular reference)
+const MemoizedEpisodeItem = React.memo(EpisodeItemComponent, episodeItemPropsAreEqual);
+
+// Export the memoized component
+export const EpisodeItem = MemoizedEpisodeItem;
 
 interface EpisodeListProps {
   episodes: Episode[];
@@ -126,6 +149,8 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
     if (episode) {
       // Navigate to the episode
       navigate(`/anime/${animeId}/episode/${episode.id}`);
+      // Scroll to top for better user experience
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
     } else {
       alert(`Episode ${epNumber} not found.`);
     }

@@ -14,8 +14,11 @@ interface SidebarItemProps {
 }
 
 const SidebarItem = ({ href, icon, children, active }: SidebarItemProps) => {
-  const handleClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleClick = (e: React.MouseEvent) => {
+    // Ensure we process the click first, then scroll after component re-renders
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 10);
   };
 
   return (
@@ -48,7 +51,11 @@ export function Sidebar({ className }: SidebarProps) {
         <Link href="/">
           <div 
             className="flex items-center gap-3 cursor-pointer" 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={(e) => {
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 10);
+            }}
           >
             <h1 className="text-xl font-bold">Itsukime</h1>
           </div>
@@ -99,7 +106,11 @@ export function Sidebar({ className }: SidebarProps) {
           <Link href="/genres">
             <div 
               className="nav-link flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={(e) => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+              }}
             >
               <span className="w-5"></span>
               <span className="flex items-center">More <ChevronDown className="h-4 w-4 ml-1" /></span>
@@ -129,9 +140,13 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Mobile Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 bg-sidebar border-t border-muted h-16 flex justify-around items-center md:hidden z-50">
           <Link href="/">
-            <div 
+            <div
               className={`flex flex-col items-center justify-center text-xs cursor-pointer ${location === '/' ? 'text-primary' : 'text-muted-foreground'}`}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={(e) => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+              }}
             >
               <Home className="h-6 w-6" />
               <span>Home</span>
@@ -140,7 +155,11 @@ export function Sidebar({ className }: SidebarProps) {
           <Link href="/trending">
             <div 
               className={`flex flex-col items-center justify-center text-xs cursor-pointer ${location === '/trending' ? 'text-primary' : 'text-muted-foreground'}`}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={(e) => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+              }}
             >
               <TrendingUp className="h-6 w-6" />
               <span>Trending</span>
@@ -149,7 +168,11 @@ export function Sidebar({ className }: SidebarProps) {
           <Link href="/search">
             <div 
               className={`flex flex-col items-center justify-center text-xs cursor-pointer ${location === '/search' ? 'text-primary' : 'text-muted-foreground'}`}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={(e) => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+              }}
             >
               <Search className="h-6 w-6" />
               <span>Search</span>
@@ -158,7 +181,11 @@ export function Sidebar({ className }: SidebarProps) {
           <Link href="/history">
             <div 
               className={`flex flex-col items-center justify-center text-xs cursor-pointer ${location.includes('/history') ? 'text-primary' : 'text-muted-foreground'}`}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={(e) => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 10);
+              }}
             >
               <History className="h-6 w-6" />
               <span>History</span>
@@ -169,10 +196,10 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
-  // Desktop version
+  // Desktop version - floating with fixed position
   return (
     <aside className={cn(
-      "bg-sidebar border-r border-muted h-screen overflow-y-auto flex-shrink-0 z-30 w-full",
+      "bg-sidebar border-r border-muted fixed top-0 left-0 h-screen overflow-y-auto flex-shrink-0 z-30 w-64",
       className
     )}>
       {sidebarContent}
