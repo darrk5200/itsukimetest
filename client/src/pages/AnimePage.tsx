@@ -268,9 +268,10 @@ export default function AnimePage({ params }: AnimePageProps) {
             </h2>
           </div>
           
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left side: Video Player (50% on desktop) */}
-            <div className="w-full lg:w-1/2">
+          {/* Responsive layout - 90% on mobile, 50/50 on desktop */}
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Video Player (90% width on mobile, 50% on desktop) */}
+            <div className="w-[90%] mx-auto md:w-1/2 md:mx-0">
               <VideoPlayer
                 src={currentEpisode.video_url}
                 poster={currentEpisode.thumbnail}
@@ -278,13 +279,13 @@ export default function AnimePage({ params }: AnimePageProps) {
                 animeId={anime.id}
                 episodeId={currentEpisode.id}
                 onEnded={handleEpisodeEnded}
-                className="mb-6 lg:mb-0"
+                className="mb-6 md:mb-0"
               />
             </div>
             
-            {/* Right side: Additional content (50% on desktop) */}
-            <div className="w-full lg:w-1/2">
-              {/* Removed episode info card - now showing above video */}
+            {/* Right side: Additional content (hidden on mobile, 50% on desktop) */}
+            <div className="hidden md:block md:w-1/2">
+              {/* This space can be used for related information if needed */}
             </div>
           </div>
           

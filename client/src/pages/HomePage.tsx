@@ -24,7 +24,7 @@ function HeroSlide({ anime }: { anime: Anime }) {
         alt={anime.anime_name} 
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent transition-all duration-500 ease-in-out"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
       <div className="absolute bottom-0 left-0 p-4 md:p-6">
         <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs md:text-sm mb-2 inline-block">
           FEATURED
@@ -56,37 +56,52 @@ function HeroSlide({ anime }: { anime: Anime }) {
 
 function FeaturedCarousel({ animes }: { animes: Anime[] }) {
   const [api, setApi] = useState<any>(null);
-  const [current, setCurrent] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pauseRef = useRef<boolean>(false);
   
-  // Auto-rotate slides every 5 seconds
+  // Auto-rotate slides every 5 seconds with smooth transitions
   useEffect(() => {
-    if (api) {
+    if (!api) return;
+    
+    // Pause rotation when user interacts with carousel
+    const handlePointerDown = () => { pauseRef.current = true; };
+    const handlePointerUp = () => { 
+      pauseRef.current = false;
+      // Reset timer when user finishes interaction
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        startAutoRotation();
+      }
+    };
+    
+    const startAutoRotation = () => {
       intervalRef.current = setInterval(() => {
-        api.scrollNext();
-      }, 5000);
+        if (!pauseRef.current) {
+          api.scrollNext({ animation: "tween", duration: 600 });
+        }
+      }, 5000); // Increased to 5 seconds for better viewing experience
+    };
+    
+    // Add event listeners for user interaction
+    if (api.carouselNode) {
+      api.carouselNode.addEventListener('pointerdown', handlePointerDown);
+      api.carouselNode.addEventListener('pointerup', handlePointerUp);
+      api.carouselNode.addEventListener('pointercancel', handlePointerUp);
     }
     
-    // Cleanup interval on unmount
+    startAutoRotation();
+    
+    // Cleanup interval and event listeners on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-    };
-  }, [api]);
-  
-  // Update current slide index when scrolling
-  useEffect(() => {
-    if (!api) return;
-    
-    const onSelect = () => {
-      setCurrent(api.selectedScrollSnap());
-    };
-    
-    api.on("select", onSelect);
-    
-    return () => {
-      api.off("select", onSelect);
+      
+      if (api.carouselNode) {
+        api.carouselNode.removeEventListener('pointerdown', handlePointerDown);
+        api.carouselNode.removeEventListener('pointerup', handlePointerUp);
+        api.carouselNode.removeEventListener('pointercancel', handlePointerUp);
+      }
     };
   }, [api]);
   
@@ -97,39 +112,18 @@ function FeaturedCarousel({ animes }: { animes: Anime[] }) {
         className="w-full" 
         opts={{
           loop: true,
-          align: "start",
-          skipSnaps: false
+          align: "center",
+          skipSnaps: false,
+          dragFree: false
         }}
       >
-        <CarouselContent className="transition-all duration-200 ease-in-out">
+        <CarouselContent className="transition-transform duration-300 ease-out">
           {animes.map((anime) => (
-            <CarouselItem key={anime.id} className="transition-all duration-200 ease-in-out">
+            <CarouselItem key={anime.id} className="transition-transform duration-300 ease-out">
               <HeroSlide anime={anime} />
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious 
-          className="left-2 md:left-4 h-8 w-8 md:h-10 md:w-10 opacity-70 hover:opacity-100 bg-background/80 hover:bg-background text-foreground border-0"
-        />
-        <CarouselNext 
-          className="right-2 md:right-4 h-8 w-8 md:h-10 md:w-10 opacity-70 hover:opacity-100 bg-background/80 hover:bg-background text-foreground border-0"
-        />
-        
-        {/* Carousel indicators */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-          {animes.map((_, index) => (
-            <button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all ${
-                current === index 
-                  ? "bg-primary scale-125" 
-                  : "bg-white/50 hover:bg-white/80"
-              }`}
-              onClick={() => api?.scrollTo(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
       </Carousel>
     </section>
   );

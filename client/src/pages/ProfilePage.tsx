@@ -9,17 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { 
   Check, 
   ChevronLeft, 
   History, 
   User as UserIcon, 
   MessageSquare, 
-  Bell 
+  Bell,
+  Moon,
+  Sun
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { getUserName, setUserName, getUserAvatar, setUserAvatar } from "@/lib/storage";
+import { getUserName, setUserName, getUserAvatar, setUserAvatar, getTheme, setTheme } from "@/lib/storage";
 
 // Import avatar icons
 import icon01 from "@/assets/icon_01.png";
@@ -32,7 +35,18 @@ import icon06 from "@/assets/icon_06.png";
 export default function ProfilePage() {
   const [userName, setUserNameState] = useState(getUserName());
   const [userAvatar, setUserAvatarState] = useState(getUserAvatar() || 'icon_01');
+  const [currentTheme, setCurrentTheme] = useState<'dark' | 'light'>(getTheme());
   const { toast } = useToast();
+  
+  // Initialize theme when component mounts
+  useEffect(() => {
+    // Apply theme class to the body
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+  }, [currentTheme]);
 
   // Get avatar image source based on the avatar name
   const getAvatarImage = (avatarName: string | undefined) => {
@@ -60,6 +74,18 @@ export default function ProfilePage() {
         description: "Your profile has been successfully updated.",
       });
     }
+  };
+  
+  // Handle theme toggle
+  const handleThemeToggle = (isChecked: boolean) => {
+    const newTheme = isChecked ? 'light' : 'dark';
+    setCurrentTheme(newTheme);
+    setTheme(newTheme);
+    
+    toast({
+      title: `${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme activated`,
+      description: `Application theme has been switched to ${newTheme} mode.`,
+    });
   };
 
   return (
@@ -239,6 +265,34 @@ export default function ProfilePage() {
         
         {/* Sidebar */}
         <div className="space-y-4">
+          {/* Theme Toggle Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>Change how ItsukiMe looks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {currentTheme === 'dark' ? (
+                    <Moon className="h-5 w-5 text-muted-foreground" />
+                  ) : (
+                    <Sun className="h-5 w-5 text-yellow-500" />
+                  )}
+                  <Label htmlFor="theme-mode" className="font-medium">
+                    {currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                  </Label>
+                </div>
+                <Switch
+                  id="theme-mode"
+                  checked={currentTheme === 'light'}
+                  onCheckedChange={handleThemeToggle}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Account Card */}
           <Card>
             <CardHeader>
               <CardTitle>Account</CardTitle>
