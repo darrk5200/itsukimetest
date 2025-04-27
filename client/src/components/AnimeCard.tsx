@@ -5,6 +5,7 @@ import { cn, isWithinDaysInGMT6 } from '@/lib/utils';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { isInWatchLater, toggleWatchLater, isInNotify, toggleNotify, addNotification } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import {
   Carousel,
   CarouselContent,
@@ -96,11 +97,10 @@ function AnimeCardComponent({ anime, isNew = false, className }: AnimeCardProps)
         onClick={handleClick}
       >
         <div className="relative">
-          <img 
+          <OptimizedImage 
             src={anime.coverpage} 
             alt={anime.anime_name} 
-            className="w-full aspect-[2/3] object-cover" 
-            loading="lazy"
+            className="w-full aspect-[2/3] object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 play-button transition-opacity">
             <div className="bg-primary text-white rounded-full p-3 transform hover:scale-110 transition-transform">

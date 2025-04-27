@@ -44,7 +44,16 @@ export function Header() {
                           className={`flex items-center gap-3 py-3 px-4 hover:bg-muted ${
                             location === item.href ? 'text-primary' : 'text-muted-foreground'
                           }`}
-                          onClick={() => setIsSheetOpen(false)}
+                          onClick={(e) => {
+                            // First close the sheet
+                            setIsSheetOpen(false);
+                            
+                            // Use a small delay to ensure navigation happens first, 
+                            // then scroll after the new page is rendered
+                            setTimeout(() => {
+                              window.scrollTo({ top: 0, behavior: 'auto' });
+                            }, 100);
+                          }}
                         >
                           {item.icon}
                           <span>{item.label}</span>
@@ -62,7 +71,11 @@ export function Header() {
           <Link href="/">
             <div
               className="flex items-center justify-center gap-2 cursor-pointer"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }, 100);
+              }}
             >
               <img 
                 src="https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/itsuki_icon.png" 
@@ -85,7 +98,11 @@ export function Header() {
               variant="ghost" 
               size="icon" 
               className="ml-2 text-muted-foreground hover:text-primary"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => {
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }, 100);
+              }}
             >
               <User className="h-6 w-6" />
               <span className="sr-only">User Profile</span>

@@ -43,7 +43,7 @@ export function WelcomeDialog() {
     <Dialog 
       open={isOpen} 
       onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[650px] md:max-w-[700px] p-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-[650px] md:max-w-[700px] p-0 overflow-hidden">
         
         <div className="flex flex-col md:flex-row">
           {/* Image section - only visible on tablets and above */}

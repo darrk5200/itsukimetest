@@ -54,6 +54,9 @@ interface Comment {
   text: string;
   timestamp: string;
   likes: number;
+  parentId?: string;
+  isReply?: boolean;
+  replies?: Comment[];
 }
 
 interface PaginationData {
@@ -86,12 +89,14 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
   const [commentText, setCommentText] = useState('');
   const [userName, setUsernameState] = useState(getUserName() || '');
   const [userAvatar, setUserAvatarState] = useState(getUserAvatar());
-  const [isNameDialogOpen, setIsNameDialogOpen] = useState(!getUserName());
+  const [isNameDialogOpen, setIsNameDialogOpen] = useState(false); // Don't show on initial load
   const [tempUserName, setTempUserName] = useState(getUserName() || '');
   const [tempUserAvatar, setTempUserAvatar] = useState(getUserAvatar());
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState<'recent' | 'likes'>('recent');
   const [userLikedComments, setUserLikedComments] = useState<Record<string, boolean>>({});
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
   
   // Comment cooldown state
   const [commentCooldown, setCommentCooldown] = useState(() => canComment());
@@ -182,10 +187,15 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
     staleTime: 60000, // 1 minute
   });
   
-  // Like comment mutation
+  // Like/unlike comment mutation
   const likeCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const response = await apiRequest(`/api/comments/${commentId}/like`, {
+    mutationFn: async ({ commentId, isUnlike = false }: { commentId: string, isUnlike?: boolean }) => {
+      // If unliking, add a query parameter
+      const endpoint = isUnlike 
+        ? `/api/comments/${commentId}/unlike` 
+        : `/api/comments/${commentId}/like`;
+      
+      const response = await apiRequest(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,12 +204,22 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
       });
       return response.json();
     },
-    onSuccess: (data, commentId) => {
-      // Only invalidate if the like was successful
-      if (data.liked) {
-        queryClient.invalidateQueries({ queryKey: [`/api/comments/${animeId}/${episodeId}`] });
-        queryClient.invalidateQueries({ queryKey: [`/api/comments/${animeId}/${episodeId}/likes`] });
-      }
+    onSuccess: (data, variables) => {
+      const { commentId, isUnlike } = variables;
+      
+      // Update UI state immediately
+      queryClient.setQueryData(
+        [`/api/comments/${animeId}/${episodeId}/likes`, userName],
+        (oldData: Record<string, boolean> = {}) => {
+          return {
+            ...oldData,
+            [commentId]: !isUnlike  // Set the liked status based on the action
+          };
+        }
+      );
+      
+      // Then invalidate the queries to get fresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/comments/${animeId}/${episodeId}`] });
     },
   });
   
@@ -212,6 +232,35 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/comments/${animeId}/${episodeId}`] });
+    },
+  });
+  
+  // Add reply mutation
+  const addReplyMutation = useMutation({
+    mutationFn: async ({ commentId, text }: { commentId: string, text: string }) => {
+      const response = await apiRequest(`/api/comments/${commentId}/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          animeId,
+          episodeId,
+          userName,
+          userAvatar,
+          text,
+          parentId: commentId,
+        }),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      // Clear reply text and replyingTo state after successful reply
+      setReplyText('');
+      setReplyingTo(null);
+      
+      // Invalidate the comments query to refresh the data
       queryClient.invalidateQueries({ queryKey: [`/api/comments/${animeId}/${episodeId}`] });
     },
   });
@@ -251,14 +300,59 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
     setCommentText('');
   };
 
-  // Handle like
-  const handleLike = (commentId: string) => {
-    likeCommentMutation.mutate(commentId);
+  // Handle like/unlike
+  const handleLike = (commentId: string, isLiked: boolean) => {
+    likeCommentMutation.mutate({ 
+      commentId, 
+      isUnlike: isLiked // If already liked, then we're unliking
+    });
   };
 
   // Handle delete
   const handleDelete = (commentId: string) => {
     deleteCommentMutation.mutate(commentId);
+  };
+  
+  // Handle toggling reply form visibility
+  const handleToggleReply = (commentId: string) => {
+    if (replyingTo === commentId) {
+      // Close reply form if clicking on the same comment
+      setReplyingTo(null);
+      setReplyText('');
+    } else {
+      // Open reply form for this comment
+      setReplyingTo(commentId);
+      setReplyText('');
+    }
+  };
+  
+  // Handle submitting a reply
+  const handleSubmitReply = (e: FormEvent, commentId: string) => {
+    e.preventDefault();
+    
+    if (!replyText.trim()) return;
+    
+    // Check for comment cooldown
+    const cooldownStatus = canComment();
+    setCommentCooldown(cooldownStatus);
+    setRemainingTime(cooldownStatus.remainingSeconds);
+    
+    // Don't proceed if on cooldown
+    if (!cooldownStatus.allowed) {
+      return;
+    }
+    
+    // If user hasn't set their name, open the dialog
+    if (!userName) {
+      setIsNameDialogOpen(true);
+      return;
+    }
+    
+    // Add the reply using the mutation
+    addReplyMutation.mutate({
+      commentId,
+      text: replyText,
+    });
   };
 
   // Handle save username and avatar
@@ -274,18 +368,8 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
       
       setIsNameDialogOpen(false);
       
-      // If there was a pending comment, submit it now
-      if (commentText.trim()) {
-        addCommentMutation.mutate({
-          animeId,
-          episodeId,
-          userName: tempUserName,
-          userAvatar: tempUserAvatar,
-          text: commentText,
-        });
-        
-        setCommentText('');
-      }
+      // No longer automatically submitting comments when creating a profile
+      // This prevents unwanted comment posting when just setting up a profile
     }
   };
 
@@ -316,14 +400,15 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
 
   return (
     <div className={className}>
-      <div className="flex justify-between items-center mb-4">
+      {/* Comments header - responsive layout */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
         <h2 className="text-xl font-bold flex items-center">
           <MessageSquare className="mr-2 h-5 w-5" />
           Comments ({pagination.totalCount})
         </h2>
         
-        {/* Sort controls */}
-        <div className="flex items-center gap-2">
+        {/* Sort controls - stacks on mobile, inline on desktop */}
+        <div className="flex items-center gap-2 mt-2 md:mt-0">
           <span className="text-sm text-muted-foreground">Sort by:</span>
           <div className="flex gap-1">
             <Button
@@ -354,8 +439,16 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
           <Textarea 
             placeholder="Share your thoughts about this episode..."
             value={commentText}
-            onChange={(e) => setCommentText(e.target.value.slice(0, 600))}
-            className="mb-1"
+            onChange={(e) => {
+              // Update comment text with max length of 600
+              setCommentText(e.target.value.slice(0, 600));
+              
+              // If user starts typing and doesn't have a username, show profile dialog
+              if (e.target.value.trim() !== '' && !userName) {
+                setIsNameDialogOpen(true);
+              }
+            }}
+            className="mb-1 border-2 border-blue-400 focus-visible:ring-1 focus-visible:ring-blue-500"
             disabled={addCommentMutation.isPending || !commentCooldown.allowed}
             maxLength={600}
           />
@@ -459,15 +552,144 @@ function CommentSectionComponent({ animeId, episodeId, className }: CommentSecti
                       <Button
                         variant={hasLiked ? "secondary" : "ghost"}
                         size="sm"
-                        onClick={() => handleLike(comment.id)}
-                        className={`h-8 px-2 ${hasLiked ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
-                        disabled={likeCommentMutation.isPending || hasLiked}
-                        title={hasLiked ? "You've already liked this comment" : "Like this comment"}
+                        onClick={() => handleLike(comment.id, hasLiked)}
+                        className={`h-8 px-2 ${hasLiked ? 'text-sky-400' : 'text-muted-foreground hover:text-sky-400'}`}
+                        disabled={likeCommentMutation.isPending}
+                        title={hasLiked ? "Click to unlike this comment" : "Like this comment"}
                       >
-                        <Heart className={`h-4 w-4 mr-1 ${hasLiked ? 'fill-primary' : ''}`} />
+                        <Heart className={`h-4 w-4 mr-1 ${hasLiked ? 'fill-sky-400' : ''}`} />
                         {comment.likes}
                       </Button>
+                      
+                      <Button
+                        variant={replyingTo === comment.id ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => handleToggleReply(comment.id)}
+                        className="h-8 px-2 text-muted-foreground hover:text-primary"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Reply
+                      </Button>
                     </div>
+                    
+                    {/* Reply form */}
+                    {replyingTo === comment.id && (
+                      <div className="mt-3 pl-8 border-l-2 border-muted">
+                        <form onSubmit={(e) => handleSubmitReply(e, comment.id)} className="space-y-2">
+                          <Textarea
+                            placeholder={`Reply to ${comment.userName}...`}
+                            value={replyText}
+                            onChange={(e) => {
+                              // Update reply text with max length of 300
+                              setReplyText(e.target.value.slice(0, 300));
+                              
+                              // If user starts typing and doesn't have a username, show profile dialog
+                              if (e.target.value.trim() !== '' && !userName) {
+                                setIsNameDialogOpen(true);
+                              }
+                            }}
+                            className="mb-1 text-sm border-2 border-blue-400 focus-visible:ring-1 focus-visible:ring-blue-500"
+                            disabled={addReplyMutation.isPending || !commentCooldown.allowed}
+                            maxLength={300}
+                          />
+                          <div className="text-xs text-right text-muted-foreground">
+                            {replyText.length}/300 characters
+                          </div>
+                          <div className="flex justify-between items-center">
+                            {!commentCooldown.allowed && (
+                              <div className="flex items-center text-xs text-yellow-500">
+                                <Timer className="h-3 w-3 mr-1" />
+                                <span>
+                                  Please wait {Math.floor(remainingTime / 60)}:{(remainingTime % 60).toString().padStart(2, '0')} before commenting again
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex gap-2 ml-auto">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setReplyingTo(null);
+                                  setReplyText('');
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="submit"
+                                size="sm"
+                                disabled={addReplyMutation.isPending || !commentCooldown.allowed || !replyText.trim()}
+                              >
+                                {addReplyMutation.isPending ? "Posting..." : "Post Reply"}
+                              </Button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                    
+                    {/* Render replies if any exist */}
+                    {comment.replies && comment.replies.length > 0 && (
+                      <div className="mt-4 pl-8 space-y-3 border-l-2 border-muted">
+                        {comment.replies.map(reply => {
+                          const hasLikedReply = likedStatusMap[reply.id] || false;
+                          
+                          return (
+                            <div key={reply.id} className="relative">
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-start gap-3">
+                                  {/* Reply user avatar */}
+                                  <Avatar className="h-8 w-8 border">
+                                    <AvatarImage 
+                                      src={getAvatarImage(reply.userAvatar)} 
+                                      alt={reply.userName}
+                                    />
+                                    <AvatarFallback>{reply.userName.charAt(0).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  
+                                  <div>
+                                    <div className="font-medium text-sm">{reply.userName}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {format(new Date(reply.timestamp), 'MMM d, yyyy h:mm a')}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {reply.userName === userName && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(reply.id)}
+                                    className="h-7 w-7 p-0"
+                                    disabled={deleteCommentMutation.isPending}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    <span className="sr-only">Delete</span>
+                                  </Button>
+                                )}
+                              </div>
+                              
+                              <p className="my-2 text-sm">{reply.text}</p>
+                              
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant={hasLikedReply ? "secondary" : "ghost"}
+                                  size="sm"
+                                  onClick={() => handleLike(reply.id, hasLikedReply)}
+                                  className={`h-6 px-2 text-xs ${hasLikedReply ? 'text-sky-400' : 'text-muted-foreground hover:text-sky-400'}`}
+                                  disabled={likeCommentMutation.isPending}
+                                  title={hasLikedReply ? "Click to unlike this reply" : "Like this reply"}
+                                >
+                                  <Heart className={`h-3 w-3 mr-1 ${hasLikedReply ? 'fill-sky-400' : ''}`} />
+                                  {reply.likes}
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Switch, Route } from 'wouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
@@ -7,29 +7,70 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
-
-// Lazy load the welcome dialog to reduce initial memory usage
-const WelcomeDialog = lazy(() => import('@/components/WelcomeDialog').then(module => ({
-  default: module.WelcomeDialog
-})));
+import { createLazyComponent } from '@/lib/codeSplitting';
+import { resourceManager } from '@/lib/memoryOptimizer';
+import { trackMemoryUsage } from '@/lib/performanceMonitor';
+import { getTheme } from '@/lib/storage';
 import { 
   ResizablePanelGroup, 
   ResizablePanel, 
   ResizableHandle 
 } from '@/components/ui/resizable';
-
-// Lazy load page components to reduce initial bundle size
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const AnimePage = lazy(() => import('@/pages/AnimePage'));
-const HistoryPage = lazy(() => import('@/pages/HistoryPage'));
-const SearchPage = lazy(() => import('@/pages/SearchPage'));
-const TrendingPage = lazy(() => import('@/pages/TrendingPage'));
-const RecommendedPage = lazy(() => import('@/pages/RecommendedPage'));
-const RecentPage = lazy(() => import('@/pages/RecentPage'));
-const WatchLaterPage = lazy(() => import('@/pages/WatchLaterPage'));
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
-const NotFound = lazy(() => import('@/pages/not-found'));
 import { useMediaQuery } from '@/hooks/use-mobile';
+
+// Enhanced lazy loading with automatic memory optimization
+const WelcomeDialog = createLazyComponent(
+  () => import('@/components/WelcomeDialog').then(module => ({
+    default: module.WelcomeDialog
+  })),
+  {
+    prefetch: true,
+    prefetchDelay: 1000,
+    onLoaded: () => trackMemoryUsage('WelcomeDialog:loaded')
+  }
+);
+
+// Lazy load page components with memory optimizations
+const HomePage = createLazyComponent(
+  () => import('@/pages/HomePage'),
+  { prefetch: true }
+);
+
+const AnimePage = createLazyComponent(
+  () => import('@/pages/AnimePage')
+);
+
+const HistoryPage = createLazyComponent(
+  () => import('@/pages/HistoryPage')
+);
+
+const SearchPage = createLazyComponent(
+  () => import('@/pages/SearchPage')
+);
+
+const TrendingPage = createLazyComponent(
+  () => import('@/pages/TrendingPage')
+);
+
+const RecommendedPage = createLazyComponent(
+  () => import('@/pages/RecommendedPage')
+);
+
+const RecentPage = createLazyComponent(
+  () => import('@/pages/RecentPage')
+);
+
+const WatchLaterPage = createLazyComponent(
+  () => import('@/pages/WatchLaterPage')
+);
+
+const ProfilePage = createLazyComponent(
+  () => import('@/pages/ProfilePage')
+);
+
+const NotFound = createLazyComponent(
+  () => import('@/pages/not-found')
+);
 
 function Router() {
   const isMobile = useMediaQuery("(max-width: 1024px)");
@@ -103,6 +144,45 @@ function Router() {
 }
 
 function App() {
+  // Start memory monitoring when the app loads
+  useEffect(() => {
+    // Import and start the memory monitor
+    import('./lib/memoryMonitor').then(({ memoryMonitor }) => {
+      memoryMonitor.start();
+      
+      // Log initial memory usage
+      const initialUsage = memoryMonitor.checkMemoryUsage();
+      console.log('Initial memory usage:', 
+        (initialUsage.usedJSHeapSize || 0) / (1024 * 1024), 'MB',
+        `(${initialUsage.usedPercentage?.toFixed(2)}%)`
+      );
+    });
+    
+    // Clean up when the app is unmounted
+    return () => {
+      // Stop memory monitoring and clean up resources
+      import('./lib/memoryMonitor').then(({ memoryMonitor }) => {
+        memoryMonitor.stop();
+      });
+      
+      // Clean up all remaining resources
+      resourceManager.cleanupAll();
+    };
+  }, []);
+  
+  // Initialize theme when app loads
+  useEffect(() => {
+    // Check user's theme preference
+    const theme = getTheme();
+    
+    // Apply theme class to the body
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

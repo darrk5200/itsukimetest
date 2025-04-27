@@ -486,7 +486,7 @@ function VideoPlayerComponent({
                     </Button>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="text-white hover:text-primary h-8 w-8" onClick={toggleMute}>
                       {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                     </Button>
@@ -496,9 +496,19 @@ function VideoPlayerComponent({
                       max={100}
                       step={1}
                       onValueChange={handleVolumeChange}
-                      className="cursor-pointer flex-1"
+                      className="cursor-pointer flex-1 w-24 md:w-auto"
                     />
                   </div>
+                  
+                  {/* Mobile-only volume button */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="md:hidden text-white hover:text-primary h-8 w-8" 
+                    onClick={toggleMute}
+                  >
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  </Button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
@@ -515,7 +525,8 @@ function VideoPlayerComponent({
                       <SkipForward className="h-5 w-5" />
                     </Button>
                     
-                    <div className="flex items-center gap-2 w-28">
+                    {/* Desktop volume controls */}
+                    <div className="hidden md:flex items-center gap-2 w-28">
                       <Button variant="ghost" size="icon" className="text-white hover:text-primary h-8 w-8" onClick={toggleMute}>
                         {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                       </Button>
@@ -528,6 +539,16 @@ function VideoPlayerComponent({
                         className="cursor-pointer"
                       />
                     </div>
+                    
+                    {/* Mobile-only volume button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="md:hidden text-white hover:text-primary h-8 w-8" 
+                      onClick={toggleMute}
+                    >
+                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    </Button>
                   </div>
                   
                   <div className="flex items-center gap-4">

@@ -26,6 +26,8 @@ export const comments = sqliteTable("comments", {
   text: text("comment_text").notNull(),
   timestamp: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
   likes: integer("likes").notNull().default(0),
+  parentId: text("parent_id"), // ID of the parent comment for replies, null for top-level comments
+  isReply: integer("is_reply").notNull().default(0), // SQLite boolean: 0 = false, 1 = true
 });
 
 // Table to track user likes on comments
@@ -62,15 +64,30 @@ export const insertAnimeSchema = createInsertSchema(animes).extend({
   episodes: z.array(episodeSchema),
 });
 
-export const commentSchema = z.object({
-  id: z.string(),
-  animeId: z.number(),
-  episodeId: z.number(),
-  userName: z.string(),
-  userAvatar: z.string().default("icon_01"),
-  text: z.string(),
+// Define base comment schema without replies to avoid circular reference
+export const baseCommentSchema = z.object({
+  id: z.string().uuid(),
+  animeId: z.number().int().positive(),
+  episodeId: z.number().int().positive(),
+  userName: z.string().min(1).max(16).regex(/^[a-zA-Z0-9]+$/, {
+    message: "Username must only contain letters and numbers"
+  }),
+  userAvatar: z.string().regex(/^icon_0[1-6]$/, {
+    message: "Avatar must be one of the predefined options"
+  }).default("icon_01"),
+  text: z.string().min(1).max(600).transform(str => 
+    // Simple HTML sanitization
+    str.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  ),
   timestamp: z.date().or(z.string()),
-  likes: z.number(),
+  likes: z.number().int().nonnegative(),
+  parentId: z.string().uuid().nullable().optional(),
+  isReply: z.boolean().optional().default(false),
+});
+
+// Now define the full comment schema with replies
+export const commentSchema = baseCommentSchema.extend({
+  replies: z.array(baseCommentSchema).optional(),
 });
 
 export const insertCommentSchema = createInsertSchema(comments).omit({
