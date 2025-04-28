@@ -1,4 +1,4 @@
-import { animes, comments, commentLikes, type Anime, type InsertAnime, type Episode, type Comment, type InsertComment, type CommentLike, type InsertCommentLike } from "@shared/schema";
+import { animes, comments, commentLikes, weeklyViews, type Anime, type InsertAnime, type Episode, type Comment, type InsertComment, type CommentLike, type InsertCommentLike, type WeeklyView, type InsertWeeklyView } from "@shared/schema";
 import fs from 'fs/promises';
 import path from 'path';
 import { db } from './db-sqlite';
@@ -35,9 +35,17 @@ export interface IStorage {
   hasUserLikedComment(commentId: string, userId: string): Promise<boolean>;
   deleteComment(commentId: string): Promise<void>;
   
+  // User comments operations
+  getCommentsByUser(userName: string): Promise<Comment[]>;
+  
   // Comment reply operations
   addReply(reply: InsertComment & { parentId: string }): Promise<Comment>;
   getRepliesForComment(commentId: string): Promise<Comment[]>;
+  
+  // View tracking operations
+  incrementAnimeViews(animeId: number): Promise<number>; // Returns the new view count
+  getWeeklyPopular(limit?: number): Promise<Anime[]>; // Get most popular animes of the week
+  resetWeeklyViews(): Promise<void>; // Reset weekly view counters (run on Sundays)
 }
 
 export class SQLiteStorage implements IStorage {
@@ -93,6 +101,28 @@ export class SQLiteStorage implements IStorage {
           created_at TEXT NOT NULL,
           UNIQUE(comment_id, user_id)
         );
+        
+        CREATE TABLE IF NOT EXISTS animes (
+          id INTEGER PRIMARY KEY,
+          anime_name TEXT NOT NULL,
+          coverpage TEXT NOT NULL,
+          episode_count INTEGER NOT NULL,
+          released_episodes INTEGER NOT NULL,
+          release_date TEXT NOT NULL,
+          genres TEXT NOT NULL,
+          description TEXT NOT NULL,
+          last_episode_timestamp TEXT,
+          episodes TEXT NOT NULL,
+          view_count INTEGER NOT NULL DEFAULT 0
+        );
+        
+        CREATE TABLE IF NOT EXISTS weekly_views (
+          id TEXT PRIMARY KEY,
+          anime_id INTEGER NOT NULL,
+          view_count INTEGER NOT NULL DEFAULT 0,
+          week_start_date TEXT NOT NULL,
+          last_updated TEXT NOT NULL
+        );
       `);
       
       // Check if parent_id and is_reply columns exist, add them if they don't
@@ -116,6 +146,16 @@ export class SQLiteStorage implements IStorage {
           db.$client.exec(`ALTER TABLE comments ADD COLUMN is_reply INTEGER DEFAULT 0 NOT NULL`);
           console.log("Added is_reply column to comments table");
         }
+        
+        // Check if view_count column exists in animes table
+        const viewCountCheck = db.$client.prepare("PRAGMA table_info(animes)").all()
+          .some((col: any) => col.name === 'view_count');
+          
+        if (!viewCountCheck) {
+          // Add view_count column if it doesn't exist
+          db.$client.exec(`ALTER TABLE animes ADD COLUMN view_count INTEGER NOT NULL DEFAULT 0`);
+          console.log("Added view_count column to animes table");
+        }
       } catch (error) {
         console.log("Error checking or adding columns:", error);
       }
@@ -132,7 +172,29 @@ export class SQLiteStorage implements IStorage {
   }
 
   async getAnimeById(id: number): Promise<Anime | undefined> {
-    return this.animes.get(id);
+    const anime = this.animes.get(id);
+    if (!anime) return undefined;
+    
+    try {
+      // Get the current week's start date
+      const weekStartDate = this.getCurrentWeekStartDate();
+      
+      // Get weekly views for this anime
+      const weeklyViewData = db.$client.prepare(`
+        SELECT view_count FROM weekly_views 
+        WHERE anime_id = ? AND week_start_date = ?
+        LIMIT 1
+      `).get(id, weekStartDate) as any;
+      
+      // Return anime with weeklyViews property
+      return {
+        ...anime,
+        weeklyViews: weeklyViewData?.view_count || 0
+      };
+    } catch (error) {
+      console.error("Error getting weekly views for anime:", error);
+      return anime;
+    }
   }
 
   async searchAnimes(query: string): Promise<Anime[]> {
@@ -428,6 +490,45 @@ export class SQLiteStorage implements IStorage {
     }
   }
   
+  async getCommentsByUser(userName: string): Promise<Comment[]> {
+    try {
+      // Use parameterized query to get all comments by this user
+      const query = `
+        SELECT * FROM comments 
+        WHERE user_name = ?
+        ORDER BY created_at DESC
+      `;
+      
+      const userComments = db.$client.prepare(query).all(userName) as any[];
+      
+      if (!userComments || userComments.length === 0) {
+        return [];
+      }
+      
+      // Convert from database schema to Comment type with correct field names
+      const processedComments = userComments.map((comment: any) => {
+        return {
+          id: comment.id,
+          animeId: comment.anime_id,
+          episodeId: comment.episode_id,
+          userName: comment.user_name,
+          userAvatar: comment.user_avatar,
+          text: comment.comment_text,
+          createdAt: comment.created_at, // Keep created_at for timestamp
+          timestamp: comment.created_at, // Also provide timestamp for consistency
+          likes: comment.likes,
+          parentId: comment.parent_id,
+          isReply: comment.is_reply === 1
+        } as any as Comment;
+      });
+      
+      return processedComments;
+    } catch (error) {
+      console.error("Error fetching comments by user:", error);
+      return [];
+    }
+  }
+  
   async deleteComment(commentId: string): Promise<void> {
     try {
       // Begin transaction
@@ -506,6 +607,160 @@ export class SQLiteStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching replies for comment:", error);
       return [];
+    }
+  }
+  
+  // Helper method to get current week's start date (Sunday)
+  private getCurrentWeekStartDate(): string {
+    const now = new Date();
+    const day = now.getDay(); // 0 is Sunday
+    const diff = now.getDate() - day;
+    
+    // Set to previous Sunday (or today if it's Sunday)
+    const sunday = new Date(now);
+    sunday.setDate(diff);
+    sunday.setHours(0, 0, 0, 0);
+    
+    return sunday.toISOString();
+  }
+  
+  // View tracking operations
+  async incrementAnimeViews(animeId: number): Promise<number> {
+    try {
+      // Start transaction for atomicity
+      db.$client.exec('BEGIN TRANSACTION');
+      
+      try {
+        // 1. Update total view count in animes table
+        db.$client.prepare('UPDATE animes SET view_count = view_count + 1 WHERE id = ?').run(animeId);
+        
+        // 2. Get or create weekly view record
+        const weekStartDate = this.getCurrentWeekStartDate();
+        
+        // Check if there's already a weekly view record for this anime and week
+        const existingWeeklyView = db.$client.prepare(`
+          SELECT * FROM weekly_views 
+          WHERE anime_id = ? AND week_start_date = ?
+          LIMIT 1
+        `).get(animeId, weekStartDate) as any;
+        
+        if (existingWeeklyView) {
+          // Update existing record
+          db.$client.prepare(`
+            UPDATE weekly_views 
+            SET view_count = view_count + 1, last_updated = ? 
+            WHERE anime_id = ? AND week_start_date = ?
+          `).run(new Date().toISOString(), animeId, weekStartDate);
+        } else {
+          // Create new weekly view record
+          db.$client.prepare(`
+            INSERT INTO weekly_views (id, anime_id, view_count, week_start_date, last_updated)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(crypto.randomUUID(), animeId, 1, weekStartDate, new Date().toISOString());
+        }
+        
+        // 3. Get the current view counts to return
+        const animeResult = db.$client.prepare('SELECT view_count FROM animes WHERE id = ?')
+          .get(animeId) as any;
+          
+        // Get weekly view count
+        const weeklyResult = db.$client.prepare(`
+          SELECT view_count FROM weekly_views 
+          WHERE anime_id = ? AND week_start_date = ?
+        `).get(animeId, weekStartDate) as any;
+        
+        // Commit transaction
+        db.$client.exec('COMMIT');
+        
+        // Update in-memory cache
+        const cachedAnime = this.animes.get(animeId);
+        if (cachedAnime) {
+          this.animes.set(animeId, {
+            ...cachedAnime,
+            viewCount: animeResult?.view_count || 0
+          });
+        }
+        
+        // Return regular view count (for backward compatibility)
+        return animeResult?.view_count || 0;
+      } catch (error) {
+        // Rollback on error
+        db.$client.exec('ROLLBACK');
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error incrementing anime views:", error);
+      return 0;
+    }
+  }
+  
+  async getWeeklyPopular(limit: number = 10): Promise<Anime[]> {
+    try {
+      // Get the current week's start date
+      const weekStartDate = this.getCurrentWeekStartDate();
+      
+      // Get the top animes by weekly views
+      const topAnimeViews = db.$client.prepare(`
+        SELECT anime_id, view_count 
+        FROM weekly_views 
+        WHERE week_start_date = ? 
+        ORDER BY view_count DESC 
+        LIMIT ?
+      `).all(weekStartDate, limit) as any[];
+      
+      if (topAnimeViews.length === 0) {
+        // If no weekly data, get top overall viewed animes
+        const allAnimes = Array.from(this.animes.values());
+        return [...allAnimes]
+          .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+          .slice(0, limit);
+      }
+      
+      // Map anime IDs to actual anime objects with their weekly view counts
+      const result: Anime[] = [];
+      for (const { anime_id, view_count } of topAnimeViews) {
+        const anime = this.animes.get(anime_id);
+        if (anime) {
+          result.push({
+            ...anime,
+            weeklyViews: view_count || 0
+          });
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error getting weekly popular animes:", error);
+      return [];
+    }
+  }
+  
+  async resetWeeklyViews(): Promise<void> {
+    try {
+      // Get the new week's start date
+      const newWeekStartDate = this.getCurrentWeekStartDate();
+      
+      // Start transaction
+      db.$client.exec('BEGIN TRANSACTION');
+      
+      try {
+        // Delete all weekly view records except for the current week
+        db.$client.prepare(`
+          DELETE FROM weekly_views 
+          WHERE week_start_date != ?
+        `).run(newWeekStartDate);
+        
+        // Commit transaction
+        db.$client.exec('COMMIT');
+        
+        console.log(`Weekly views reset. New week starting: ${newWeekStartDate}`);
+      } catch (error) {
+        // Rollback on error
+        db.$client.exec('ROLLBACK');
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error resetting weekly views:", error);
     }
   }
 }

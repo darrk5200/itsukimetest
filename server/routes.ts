@@ -38,6 +38,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Increment view count for an anime
+  app.post('/api/animes/:id/view', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid anime ID' });
+      }
+      
+      // Check if anime exists
+      const anime = await storage.getAnimeById(id);
+      if (!anime) {
+        return res.status(404).json({ message: 'Anime not found' });
+      }
+      
+      // Increment view count and get new count
+      const newViewCount = await storage.incrementAnimeViews(id);
+      
+      // Get the updated anime with weekly view count
+      const updatedAnime = await storage.getAnimeById(id);
+      
+      res.json({ 
+        id, 
+        viewCount: newViewCount,
+        weeklyViews: updatedAnime?.weeklyViews || 0 
+      });
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+      res.status(500).json({ message: 'Failed to increment view count' });
+    }
+  });
+  
+  // Get weekly popular animes
+  app.get('/api/animes/weekly/popular', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const weeklyPopular = await storage.getWeeklyPopular(limit);
+      
+      res.json(weeklyPopular);
+    } catch (error) {
+      console.error('Error fetching weekly popular animes:', error);
+      res.status(500).json({ message: 'Failed to fetch weekly popular animes' });
+    }
+  });
+  
   // Search animes
   app.get('/api/animes/search', async (req, res) => {
     try {
@@ -395,6 +439,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching replies:', error);
       res.status(500).json({ message: 'Failed to fetch replies' });
+    }
+  });
+
+  // Get all comments made by a specific user
+  app.get('/api/user/:userName/comments', async (req, res) => {
+    try {
+      const userName = req.params.userName;
+      
+      if (!userName) {
+        return res.status(400).json({ message: 'Username is required' });
+      }
+      
+      // Get all animes to be able to include anime names in the response
+      const animes = await storage.getAllAnimes();
+      const animeMap = new Map(animes.map(anime => [anime.id, anime]));
+      
+      // Get all comments by this user
+      const allComments = await storage.getCommentsByUser(userName);
+      
+      // Enhance comments with anime information
+      const enhancedComments = allComments.map(comment => {
+        const anime = animeMap.get(comment.animeId);
+        const episodeIndex = anime?.episodes.findIndex(ep => ep.id === comment.episodeId) || 0;
+        const episode = anime?.episodes[episodeIndex];
+        
+        return {
+          id: comment.id,
+          animeId: comment.animeId,
+          episodeId: comment.episodeId,
+          animeName: anime?.anime_name || 'Unknown Anime',
+          episodeNumber: episode?.episode_number || 0,
+          text: comment.text,
+          timestamp: comment.createdAt,
+          likes: comment.likes
+        };
+      });
+      
+      res.json(enhancedComments);
+    } catch (error) {
+      console.error('Error fetching user comments:', error);
+      res.status(500).json({ message: 'Failed to fetch user comments' });
     }
   });
 

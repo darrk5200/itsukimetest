@@ -7,6 +7,7 @@ import { saveToWatchHistory } from '@/lib/storage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { throttle, debounce, createCleanupFn } from '@/lib/memoryOptimizer';
+import { apiRequest } from '@/lib/queryClient';
 
 interface VideoPlayerProps {
   src: string;
@@ -43,6 +44,7 @@ function VideoPlayerComponent({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [viewTracked, setViewTracked] = useState(false);
   const { toast } = useToast();
   
   // Check if the URL is a direct video file or should be embedded
@@ -137,6 +139,28 @@ function VideoPlayerComponent({
     });
   }, [toast]);
 
+  // Track view when anime is watched
+  const trackAnimeView = useCallback(() => {
+    if (!viewTracked) {
+      // Call API to increment view count
+      apiRequest(`/api/animes/${animeId}/view`, { method: 'POST' })
+        .then(response => {
+          console.log('View tracked for anime:', animeId, response);
+          setViewTracked(true);
+        })
+        .catch(error => {
+          console.error('Failed to track view:', error);
+        });
+    }
+  }, [animeId, viewTracked]);
+  
+  // Track view when video starts playing
+  useEffect(() => {
+    if (isPlaying && !viewTracked) {
+      trackAnimeView();
+    }
+  }, [isPlaying, trackAnimeView]);
+
   // Initialize video player
   useEffect(() => {
     if (useIframeEmbed) return () => {}; // Skip for iframe embeds
@@ -195,7 +219,7 @@ function VideoPlayerComponent({
     onVideoError
   ]);
   
-  // For iframe embeds, just save to watch history once
+  // For iframe embeds, just save to watch history once and track view
   useEffect(() => {
     if (useIframeEmbed) {
       // Record the start of watching
@@ -206,8 +230,20 @@ function VideoPlayerComponent({
         progress: 0,
         lastWatched: new Date().toISOString(),
       });
+      
+      // Track view for iframe embeds immediately
+      if (!viewTracked) {
+        apiRequest(`/api/animes/${animeId}/view`, { method: 'POST' })
+          .then(response => {
+            console.log('View tracked for iframe embed:', animeId, response);
+            setViewTracked(true);
+          })
+          .catch(error => {
+            console.error('Failed to track view for iframe:', error);
+          });
+      }
     }
-  }, [useIframeEmbed, animeId, episodeId]);
+  }, [useIframeEmbed, animeId, episodeId, viewTracked]);
   
   // Memoize the controls timer function to prevent recreation on each render
   const startControlsTimer = useCallback(() => {
@@ -300,13 +336,13 @@ function VideoPlayerComponent({
   
   const handleSkipBackward = useCallback(() => {
     if (videoRef.current) {
-      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 5);
     }
   }, []);
   
   const handleSkipForward = useCallback(() => {
     if (videoRef.current) {
-      videoRef.current.currentTime = Math.min(duration, videoRef.current.currentTime + 10);
+      videoRef.current.currentTime = Math.min(duration, videoRef.current.currentTime + 5);
     }
   }, [duration]);
   
@@ -356,6 +392,67 @@ function VideoPlayerComponent({
     );
   }, []);
   
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle key events if video player is in view/focus
+      const videoContainer = containerRef.current;
+      if (!videoContainer || !videoRef.current) return;
+      
+      // Check if video container is in viewport
+      const rect = videoContainer.getBoundingClientRect();
+      const isInViewport = (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
+      
+      if (!isInViewport) return;
+      
+      // Only if the target is not an input element
+      if (e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      switch (e.key) {
+        case ' ': // Spacebar for play/pause
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowRight': // Right arrow for 5s forward
+          e.preventDefault();
+          if (videoRef.current) {
+            videoRef.current.currentTime = Math.min(duration, videoRef.current.currentTime + 5);
+          }
+          break;
+        case 'ArrowLeft': // Left arrow for 5s backward
+          e.preventDefault();
+          if (videoRef.current) {
+            videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 5);
+          }
+          break;
+        case 'f': // f for fullscreen
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'm': // m for mute
+          e.preventDefault();
+          toggleMute();
+          break;
+      }
+    };
+    
+    // Add event listener for keyboard controls
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [togglePlay, toggleFullscreen, toggleMute, duration]);
+  
   // Function to retry loading the video
   const retryPlayback = useCallback(() => {
     setIsLoading(true);
@@ -374,8 +471,11 @@ function VideoPlayerComponent({
   return (
     <div 
       ref={containerRef}
-      className={`video-container relative bg-black rounded-lg overflow-hidden ${className}`}
-      style={{ paddingBottom: '56.25%' }}
+      className={`video-container relative bg-black rounded-lg overflow-hidden shadow-xl ${className}`}
+      style={{ 
+        paddingBottom: className?.includes('md:h-full') && !isMobile ? '0' : '56.25%', 
+        height: className?.includes('md:h-full') && !isMobile ? '100%' : undefined
+      }}
       onMouseMove={useIframeEmbed ? undefined : handleContainerMouseMove}
       onTouchStart={useIframeEmbed ? undefined : (isMobile ? handleContainerTouch : undefined)}
     >
@@ -419,12 +519,12 @@ function VideoPlayerComponent({
           )}
           
           {hasError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-6 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white p-6 text-center backdrop-blur-sm">
               <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
               <h3 className="text-xl font-semibold mb-2">Video Error</h3>
               <p className="mb-4">{errorMessage}</p>
               <Button 
-                className="flex items-center gap-2" 
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90" 
                 onClick={retryPlayback}
               >
                 <RefreshCw className="h-4 w-4" />
@@ -433,131 +533,139 @@ function VideoPlayerComponent({
             </div>
           )}
           
-          {!isPlaying && !isLoading && !hasError && (
-            <div 
-              className="absolute inset-0 flex items-center justify-center cursor-pointer"
-              onClick={togglePlay}
-            >
-              <div className={`text-white opacity-80 ${isMobile ? 'h-20 w-20' : 'h-24 w-24'}`}>
-                <Play className="h-full w-full" />
-              </div>
+          {/* Big center play button removed */}
+          
+          {/* Video title overlay */}
+          {!hasError && title && (
+            <div className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent px-4 py-3 transition-opacity duration-300 ${
+              showControls ? 'opacity-100' : 'opacity-0'
+            }`}>
+              <h2 className="text-white font-medium truncate">{title}</h2>
             </div>
           )}
           
+          {/* Video controls */}
           {!hasError && (
             <div 
-              className={`video-controls absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
+              className={`video-controls absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent pb-4 pt-8 px-4 transition-opacity duration-300 ${
                 showControls ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-white text-sm">{title}</div>
-                <div className="text-white text-sm">{formatDuration(currentTime)} / {formatDuration(duration)}</div>
-              </div>
-              
-              <div className="progress-bar mb-4 rounded-full overflow-hidden">
-                <Slider
-                  value={[progress]}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  onValueChange={handleProgressChange}
-                  className="cursor-pointer h-1.5"
-                />
-              </div>
-              
-              {isMobile ? (
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={handleSkipBackward}>
-                      <SkipBack className="h-5 w-5" />
-                    </Button>
-                    
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary h-10 w-10" onClick={togglePlay}>
-                      {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                    </Button>
-                    
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={handleSkipForward}>
-                      <SkipForward className="h-5 w-5" />
-                    </Button>
-                    
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={toggleFullscreen}>
-                      <Maximize className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  
-                  <div className="hidden md:flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary h-8 w-8" onClick={toggleMute}>
-                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                    </Button>
-                    <Slider
-                      value={[isMuted ? 0 : volume * 100]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={handleVolumeChange}
-                      className="cursor-pointer flex-1 w-24 md:w-auto"
-                    />
-                  </div>
-                  
-                  {/* Mobile-only volume button */}
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="md:hidden text-white hover:text-primary h-8 w-8" 
-                    onClick={toggleMute}
-                  >
-                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                  </Button>
+              {/* Progress bar */}
+              <div className="progress-bar-container group relative mb-3">
+                <div className="absolute -top-6 left-0 right-0 flex justify-between items-center px-1">
+                  <div className="text-white text-xs font-medium drop-shadow-md">{formatDuration(currentTime)}</div>
+                  <div className="text-white text-xs font-medium drop-shadow-md">{formatDuration(duration)}</div>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={handleSkipBackward}>
-                      <SkipBack className="h-5 w-5" />
+                
+                <div className="h-2 group-hover:h-4 transition-all duration-200 relative rounded-full overflow-hidden bg-gray-800/90 shadow-inner">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-primary rounded-r-full shadow-lg" 
+                    style={{ width: `${progress}%` }}
+                  >
+                    {/* Rounded cap at the end of the progress bar with pop-out effect */}
+                    <div 
+                      className="absolute top-0 bottom-0 right-0 w-4 h-4 -mr-2 bg-primary rounded-full shadow-md scale-0 group-hover:scale-100 transition-transform duration-200"
+                      style={{ 
+                        transformOrigin: 'center',
+                        transform: `scale(${showControls ? 1 : 0})` 
+                      }}
+                    ></div>
+                  </div>
+                  <Slider
+                    value={[progress]}
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    className="absolute inset-0 z-10 opacity-0"
+                    onValueChange={handleProgressChange}
+                  />
+                </div>
+              </div>
+              
+              {/* Control buttons */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center space-x-3">
+                  {/* Play/Pause button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 rounded-full h-9 w-9 p-0"
+                    onClick={togglePlay}
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-5 w-5" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                  </Button>
+                  
+                  {/* Skip forward/backward */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
+                    onClick={handleSkipBackward}
+                  >
+                    <SkipBack className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
+                    onClick={handleSkipForward}
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Volume control */}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
+                      onClick={toggleMute}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="h-4 w-4" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
                     </Button>
                     
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary h-10 w-10" onClick={togglePlay}>
-                      {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                    </Button>
-                    
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={handleSkipForward}>
-                      <SkipForward className="h-5 w-5" />
-                    </Button>
-                    
-                    {/* Desktop volume controls */}
-                    <div className="hidden md:flex items-center gap-2 w-28">
-                      <Button variant="ghost" size="icon" className="text-white hover:text-primary h-8 w-8" onClick={toggleMute}>
-                        {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                      </Button>
+                    <div className="relative w-20 h-8 hidden sm:flex items-center">
+                      <div className="absolute inset-0 w-full h-1 bg-gray-700 rounded-full">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-primary rounded-full" 
+                          style={{ width: `${isMuted ? 0 : volume * 100}%` }}
+                        ></div>
+                      </div>
                       <Slider
                         value={[isMuted ? 0 : volume * 100]}
                         min={0}
                         max={100}
                         step={1}
+                        className="absolute inset-0"
                         onValueChange={handleVolumeChange}
-                        className="cursor-pointer"
                       />
                     </div>
-                    
-                    {/* Mobile-only volume button */}
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="md:hidden text-white hover:text-primary h-8 w-8" 
-                      onClick={toggleMute}
-                    >
-                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="text-white hover:text-primary" onClick={toggleFullscreen}>
-                      <Maximize className="h-5 w-5" />
-                    </Button>
                   </div>
                 </div>
-              )}
+                
+                {/* Right controls */}
+                <div className="flex items-center">
+                  {/* Fullscreen button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
+                    onClick={toggleFullscreen}
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </>
@@ -566,14 +674,16 @@ function VideoPlayerComponent({
   );
 }
 
-// Define custom equality check for memoization
+// Memoization with custom comparison function to prevent unnecessary re-renders
 const videoPlayerPropsAreEqual = (prevProps: VideoPlayerProps, nextProps: VideoPlayerProps): boolean => {
-  // Custom comparison function to prevent unnecessary re-renders
-  return prevProps.src === nextProps.src &&
+  return (
+    prevProps.src === nextProps.src &&
+    prevProps.poster === nextProps.poster &&
+    prevProps.title === nextProps.title &&
     prevProps.animeId === nextProps.animeId &&
     prevProps.episodeId === nextProps.episodeId &&
-    prevProps.className === nextProps.className;
+    prevProps.className === nextProps.className
+  );
 };
 
-// Export the memoized component to prevent unnecessary re-renders
 export const VideoPlayer = memo(VideoPlayerComponent, videoPlayerPropsAreEqual);

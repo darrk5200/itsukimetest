@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { Play, ChevronLeft, ChevronRight, Clock, CheckCircle2, Bell } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, BookmarkPlus, CheckCircle2, Bell } from 'lucide-react';
 import { Anime } from '@/lib/types';
 import { cn, isWithinDaysInGMT6 } from '@/lib/utils';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -50,10 +50,10 @@ function AnimeCardComponent({ anime, isNew = false, className }: AnimeCardProps)
     setInWatchLater(added);
     
     toast({
-      title: added ? "Added to Watch Later" : "Removed from Watch Later",
+      title: added ? "Bookmarked" : "Bookmark Removed",
       description: added 
-        ? `${anime.anime_name} has been added to your Watch Later list` 
-        : `${anime.anime_name} has been removed from your Watch Later list`,
+        ? `${anime.anime_name} has been added to your bookmarks` 
+        : `${anime.anime_name} has been removed from your bookmarks`,
       duration: 2000,
     });
   };
@@ -111,16 +111,16 @@ function AnimeCardComponent({ anime, isNew = false, className }: AnimeCardProps)
             <span className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">NEW</span>
           )}
           
-          {/* Watch Later button */}
+          {/* Bookmark button */}
           <button 
             className="absolute top-2 right-2 bg-background/80 p-1.5 rounded-full hover:bg-background transition-colors z-10"
             onClick={handleWatchLaterClick}
-            aria-label={inWatchLater ? "Remove from Watch Later" : "Add to Watch Later"}
+            aria-label={inWatchLater ? "Remove from bookmarks" : "Add to bookmarks"}
           >
             {inWatchLater ? (
               <CheckCircle2 className="h-4 w-4 text-primary" />
             ) : (
-              <Clock className="h-4 w-4" />
+              <BookmarkPlus className="h-4 w-4" />
             )}
           </button>
           

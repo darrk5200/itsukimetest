@@ -14,6 +14,7 @@ export const animes = sqliteTable("animes", {
   description: text("description").notNull(),
   lastEpisodeTimestamp: text("last_episode_timestamp"),
   episodes: text("episodes", { mode: "json" }).notNull(),
+  viewCount: integer("view_count").notNull().default(0), // Total all-time view count
 });
 
 // Comments table for global comments
@@ -38,6 +39,15 @@ export const commentLikes = sqliteTable("comment_likes", {
   timestamp: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
+// Table to track weekly view counts, resets every Sunday
+export const weeklyViews = sqliteTable("weekly_views", {
+  id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+  animeId: integer("anime_id").notNull(),
+  viewCount: integer("view_count").notNull().default(0),
+  weekStartDate: text("week_start_date").notNull(), // ISO date string for the start of the week (Sunday)
+  lastUpdated: text("last_updated").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
 export const episodeSchema = z.object({
   id: z.number(),
   episode_number: z.number(),
@@ -58,6 +68,8 @@ export const animeSchema = z.object({
   description: z.string(),
   lastEpisodeTimestamp: z.string().optional(),
   episodes: z.array(episodeSchema),
+  viewCount: z.number().int().nonnegative().default(0),
+  weeklyViews: z.number().int().nonnegative().optional(),
 });
 
 export const insertAnimeSchema = createInsertSchema(animes).extend({
@@ -108,10 +120,25 @@ export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
   timestamp: true,
 });
 
+export const weeklyViewSchema = z.object({
+  id: z.string(),
+  animeId: z.number().int().positive(),
+  viewCount: z.number().int().nonnegative(),
+  weekStartDate: z.string(),
+  lastUpdated: z.string(),
+});
+
+export const insertWeeklyViewSchema = createInsertSchema(weeklyViews).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 export type InsertAnime = z.infer<typeof insertAnimeSchema>;
-export type Anime = typeof animes.$inferSelect;
+export type Anime = z.infer<typeof animeSchema>;
 export type Episode = z.infer<typeof episodeSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type CommentLike = typeof commentLikes.$inferSelect;
 export type InsertCommentLike = z.infer<typeof insertCommentLikeSchema>;
+export type WeeklyView = typeof weeklyViews.$inferSelect;
+export type InsertWeeklyView = z.infer<typeof insertWeeklyViewSchema>;

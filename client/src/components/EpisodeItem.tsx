@@ -19,8 +19,7 @@ function EpisodeItemComponent({ episode, animeId, isActive = false, className }:
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate(`/anime/${animeId}/episode/${episode.id}`);
-    // Scroll to top for better user experience
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10);
+    // Removed auto-scroll to top as per user request
   };
   
   return (
@@ -159,9 +158,20 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
   return (
     <div className={cn("relative", className)}>
       {/* Episode jump form */}
-      <div className="mb-4">
-        <form onSubmit={handleEpisodeJump} className="flex items-center gap-2">
-          <div className="flex-1 md:flex-none md:w-64 relative">
+      <div className={cn(
+        "mb-4",
+        // Adjust width for side panel
+        "[.side-panel_&]:w-full"
+      )}>
+        <form onSubmit={handleEpisodeJump} className={cn(
+          "flex items-center gap-2",
+          // Make form more compact in side panel
+          "[.side-panel_&]:flex-col [.side-panel_&]:items-stretch sm:[.side-panel_&]:flex-row sm:[.side-panel_&]:items-center"
+        )}>
+          <div className={cn(
+            "flex-1 md:flex-none md:w-64 relative",
+            "[.side-panel_&]:w-full [.side-panel_&]:md:w-full"
+          )}>
             <Input
               type="number"
               min="1"
@@ -173,7 +183,7 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
             />
             <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
-          <Button type="submit" size="sm">Go</Button>
+          <Button type="submit" size="sm" className="[.side-panel_&]:w-full sm:[.side-panel_&]:w-auto">Go</Button>
         </form>
       </div>
       
@@ -182,8 +192,11 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
           "grid gap-3", 
           "grid-cols-2", // xs default
           "sm:grid-cols-3", // sm breakpoint
-          "md:grid-cols-3", // md breakpoint
-          "lg:grid-cols-6" // lg and above
+          "md:grid-cols-4", // md breakpoint in main layout
+          "lg:grid-cols-5", // lg in main layout
+          // Side panel needs fewer columns
+          "[.side-panel_&]:md:grid-cols-2",
+          "[.side-panel_&]:lg:grid-cols-3"
         )}>
           {currentEpisodes.map((episode) => (
             <EpisodeItem
@@ -197,7 +210,11 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
       </div>
       
       {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-2">
+      <div className={cn(
+        "flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-2",
+        // More compact layout for side panel
+        "[.side-panel_&]:flex-col [.side-panel_&]:items-start"
+      )}>
         <div className="text-sm text-muted-foreground">
           Showing episodes {currentPage * episodesPerPage + 1}-
           {Math.min((currentPage + 1) * episodesPerPage, episodes.length)} of {episodes.length}

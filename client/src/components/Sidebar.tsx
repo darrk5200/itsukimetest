@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'wouter';
-import { Home, TrendingUp, Package, History, Bookmark, Heart, ChevronDown, Menu, Search, Clock } from 'lucide-react';
+import { Home, TrendingUp, Package, History, Heart, ChevronDown, Menu, Search, BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/hooks/use-mobile';
@@ -67,7 +67,7 @@ export function Sidebar({ className }: SidebarProps) {
           Home
         </SidebarItem>
         <SidebarItem href="/trending" icon={<TrendingUp className="h-5 w-5" />} active={location === '/trending'}>
-          Trending
+          Popular
         </SidebarItem>
         <SidebarItem href="/search" icon={<Search className="h-5 w-5" />} active={location === '/search'}>
           Search
@@ -81,8 +81,8 @@ export function Sidebar({ className }: SidebarProps) {
           <SidebarItem href="/history" icon={<History className="h-5 w-5" />} active={location === '/history'}>
             History
           </SidebarItem>
-          <SidebarItem href="/watchlater" icon={<Clock className="h-5 w-5" />} active={location === '/watchlater'}>
-            Watch Later
+          <SidebarItem href="/watchlater" icon={<BookmarkPlus className="h-5 w-5" />} active={location === '/watchlater'}>
+            Bookmarks
           </SidebarItem>
           <SidebarItem href="/favorites" icon={<Heart className="h-5 w-5" />} active={location === '/favorites'}>
             Favorites
@@ -162,7 +162,7 @@ export function Sidebar({ className }: SidebarProps) {
               }}
             >
               <TrendingUp className="h-6 w-6" />
-              <span>Trending</span>
+              <span>Popular</span>
             </div>
           </Link>
           <Link href="/search">

@@ -35,8 +35,8 @@ export function Header() {
                     {[
                       { href: '/', label: 'Home', icon: <Home className="h-5 w-5" /> },
                       { href: '/search', label: 'Search', icon: <Search className="h-5 w-5" /> },
-                      { href: '/trending', label: 'Trending', icon: <TrendingUp className="h-5 w-5" /> },
-                      { href: '/watchlater', label: 'Watch Later', icon: <Clock className="h-5 w-5" /> },
+                      { href: '/trending', label: 'Popular', icon: <TrendingUp className="h-5 w-5" /> },
+                      { href: '/watchlater', label: 'Bookmarks', icon: <Clock className="h-5 w-5" /> },
                       { href: '/history', label: 'History', icon: <HistoryIcon className="h-5 w-5" /> }
                     ].map((item) => (
                       <Link key={item.href} href={item.href}>

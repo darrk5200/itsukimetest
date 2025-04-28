@@ -68,6 +68,10 @@ const ProfilePage = createLazyComponent(
   () => import('@/pages/ProfilePage')
 );
 
+const CommentsPage = createLazyComponent(
+  () => import('@/pages/CommentsPage')
+);
+
 const NotFound = createLazyComponent(
   () => import('@/pages/not-found')
 );
@@ -100,6 +104,7 @@ function Router() {
               <Route path="/watchlater" component={WatchLaterPage} />
               <Route path="/favorites" component={HistoryPage} />
               <Route path="/profile" component={ProfilePage} />
+              <Route path="/comments" component={CommentsPage} />
               {/* Fallback to 404 */}
               <Route component={NotFound} />
             </Switch>
@@ -131,6 +136,7 @@ function Router() {
             <Route path="/watchlater" component={WatchLaterPage} />
             <Route path="/favorites" component={HistoryPage} />
             <Route path="/profile" component={ProfilePage} />
+            <Route path="/comments" component={CommentsPage} />
             {/* Fallback to 404 */}
             <Route component={NotFound} />
           </Switch>
