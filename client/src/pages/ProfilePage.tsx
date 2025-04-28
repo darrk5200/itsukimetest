@@ -311,12 +311,14 @@ export default function ProfilePage() {
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <Link href="/watchlater">
                   <Bell className="h-4 w-4 mr-2" />
-                  Watch Later
+                  Bookmarks
                 </Link>
               </Button>
-              <Button variant="ghost" className="w-full justify-start" disabled>
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Your Comments
+              <Button variant="ghost" className="w-full justify-start" asChild>
+                <Link href="/comments">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Your Comments
+                </Link>
               </Button>
             </CardContent>
           </Card>

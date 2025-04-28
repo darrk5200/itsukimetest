@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
-import { Play, Clock, CheckCircle2, ChevronDown, Bell, BellRing } from 'lucide-react';
+import { Play, CheckCircle2, ChevronDown, Bell, BellRing, Eye, BookmarkPlus, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { EpisodeList } from '@/components/EpisodeItem';
 import { AnimeListGrid } from '@/components/AnimeCard';
@@ -60,7 +61,7 @@ export default function AnimePage({ params }: AnimePageProps) {
   // Similar animes
   const [similarAnimes, setSimilarAnimes] = useState<Anime[]>([]);
   
-  // Watch Later state
+  // Bookmarks state
   const [inWatchLater, setInWatchLater] = useState(animeId ? isInWatchLater(animeId) : false);
   
   // Notify state
@@ -182,6 +183,10 @@ export default function AnimePage({ params }: AnimePageProps) {
                 <div>
                   <span className="font-semibold">Episodes:</span> <span className="text-primary font-medium">{anime.releasedEpisodes}</span>/{anime.episode_count}
                 </div>
+                <div className="flex items-center">
+                  <Eye className="h-4 w-4 inline mr-1" />
+                  <span className="font-semibold">Views:</span> <span className="ml-1">{anime.weeklyViews || 0} this week</span>
+                </div>
               </div>
               
               <div className="flex items-center gap-4">
@@ -232,10 +237,10 @@ export default function AnimePage({ params }: AnimePageProps) {
                     const added = toggleWatchLater(anime.id);
                     setInWatchLater(added);
                     toast({
-                      title: added ? "Added to Watch Later" : "Removed from Watch Later",
+                      title: added ? "Bookmarked" : "Bookmark Removed",
                       description: added 
-                        ? `${anime.anime_name} has been added to your Watch Later list` 
-                        : `${anime.anime_name} has been removed from your Watch Later list`,
+                        ? `${anime.anime_name} has been added to your bookmarks` 
+                        : `${anime.anime_name} has been removed from your bookmarks`,
                       duration: 2000,
                     });
                   }}
@@ -243,12 +248,12 @@ export default function AnimePage({ params }: AnimePageProps) {
                   {inWatchLater ? (
                     <>
                       <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
-                      In Watch Later
+                      Bookmarked
                     </>
                   ) : (
                     <>
-                      <Clock className="h-5 w-5 mr-2" />
-                      Watch Later
+                      <BookmarkPlus className="h-5 w-5 mr-2" />
+                      Bookmark
                     </>
                   )}
                 </Button>
@@ -268,10 +273,10 @@ export default function AnimePage({ params }: AnimePageProps) {
             </h2>
           </div>
           
-          {/* Responsive layout - 90% on mobile, 50/50 on desktop */}
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Video Player (90% width on mobile, 50% on desktop) */}
-            <div className="w-[90%] mx-auto md:w-1/2 md:mx-0">
+          {/* Responsive layout - stacked on mobile, side-by-side on desktop */}
+          <div className="flex flex-col md:flex-row md:h-[565px] gap-6 mb-12">
+            {/* Video Player (full width on mobile, 2/3 on desktop) */}
+            <div className="w-full md:w-3/4 md:h-full">
               <VideoPlayer
                 src={currentEpisode.video_url}
                 poster={currentEpisode.thumbnail}
@@ -279,18 +284,68 @@ export default function AnimePage({ params }: AnimePageProps) {
                 animeId={anime.id}
                 episodeId={currentEpisode.id}
                 onEnded={handleEpisodeEnded}
-                className="mb-6 md:mb-0"
+                className="md:h-full"
               />
             </div>
             
-            {/* Right side: Additional content (hidden on mobile, 50% on desktop) */}
-            <div className="hidden md:block md:w-1/2">
-              {/* This space can be used for related information if needed */}
+            {/* Right side: Episodes List (hidden on mobile, vertical list on desktop) */}
+            <div className="hidden md:block md:w-1/4 bg-background/50 rounded-md flex flex-col h-full">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-bold text-sm">EPS 1-{anime.episodes.length}</h2>
+                  <ChevronDown className="h-4 w-4" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Filter episodes..."
+                      className="text-xs py-1 px-2 pr-6 rounded bg-muted/70 border-none focus:outline-none focus:ring-1 focus:ring-primary w-[120px]"
+                    />
+                    <Search className="h-3 w-3 text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2" />
+                  </div>
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto side-panel py-2">
+                {anime.episodes.map((episode) => (
+                  <Link key={episode.id} href={`/anime/${anime.id}/episode/${episode.id}`} onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/anime/${anime.id}/episode/${episode.id}`);
+                  }}>
+                    <div className={cn(
+                      "flex gap-3 p-2 hover:bg-muted/50 transition-colors",
+                      episode.id === currentEpisode.id && "bg-muted"
+                    )}>
+                      <div className="relative w-24 h-16">
+                        <img 
+                          src={episode.thumbnail || anime.coverpage} 
+                          alt={episode.title} 
+                          className="w-full h-full object-cover rounded"
+                        />
+                        <div className="absolute bottom-1 right-1 bg-black/70 px-1 rounded text-xs">
+                          EP {episode.episode_number}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm line-clamp-1">{episode.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          {`Episode ${episode.episode_number} of ${anime.anime_name}`}
+                        </p>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Apr {5 + episode.episode_number}, 2025
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
           
-          {/* Episodes List */}
-          <div className="mb-8">
+          {/* Episodes List - Mobile Only */}
+          <div className="md:hidden mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Episodes</h2>
               {anime.episodes.length > 12 && (
@@ -311,7 +366,7 @@ export default function AnimePage({ params }: AnimePageProps) {
           </div>
           
           {/* Comments Section */}
-          <div className="mb-8">
+          <div className="mb-8 md:mt-8">
             <CommentSection 
               animeId={anime.id} 
               episodeId={currentEpisode.id}

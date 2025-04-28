@@ -40,8 +40,8 @@ export default function WatchLaterPage() {
     removeFromWatchLater(animeId);
     setWatchLaterIds(prev => prev.filter(id => id !== animeId));
     toast({
-      title: "Removed from Watch Later",
-      description: `${animeName} has been removed from your Watch Later list`,
+      title: "Removed from Bookmarks",
+      description: `${animeName} has been removed from your Bookmarks list`,
       duration: 2000,
     });
   };
@@ -54,8 +54,8 @@ export default function WatchLaterPage() {
     setWatchLaterIds([]);
     
     toast({
-      title: "Watch Later List Cleared",
-      description: "All animes have been removed from your Watch Later list",
+      title: "Bookmarks List Cleared",
+      description: "All animes have been removed from your Bookmarks list",
       duration: 2000,
     });
   };
@@ -63,7 +63,7 @@ export default function WatchLaterPage() {
   return (
     <div className="container mx-auto p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Watch Later</h1>
+        <h1 className="text-2xl font-bold">Bookmarks</h1>
         {watchLaterAnimes.length > 0 && (
           <Button 
             variant="destructive" 
@@ -99,9 +99,9 @@ export default function WatchLaterPage() {
         </div>
       ) : (
         <div className="text-center py-20">
-          <h2 className="text-xl font-medium mb-2">Your Watch Later list is empty</h2>
+          <h2 className="text-xl font-medium mb-2">Your Bookmarks list is empty</h2>
           <p className="text-muted-foreground mb-6">
-            Add anime to your Watch Later list by clicking the clock icon on anime cards or pages.
+            Add anime to your Bookmarks list by clicking the bookmark icon on anime cards or pages.
           </p>
         </div>
       )}

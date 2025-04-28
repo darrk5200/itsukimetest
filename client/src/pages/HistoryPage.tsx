@@ -38,10 +38,10 @@ function WatchHistoryEntry({ historyItem, anime, onRemove }: WatchHistoryEntryPr
   const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
   return (
-    <div className="bg-card rounded-lg overflow-hidden flex flex-col lg:flex-row">
-      <Link href={`/anime/${anime.id}/episode/${episode.id}`} className="lg:w-1/2">
+    <div className="bg-card border border-border rounded-md overflow-hidden flex flex-row">
+      <Link href={`/anime/${anime.id}/episode/${episode.id}`} className="w-2/5">
         <div 
-          className="w-full h-48 md:h-64 relative flex-shrink-0 cursor-pointer"
+          className="w-full h-28 relative flex-shrink-0 cursor-pointer"
           onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10)}
         >
           <img 
@@ -50,8 +50,8 @@ function WatchHistoryEntry({ historyItem, anime, onRemove }: WatchHistoryEntryPr
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-40 hover:bg-opacity-20 transition-opacity flex items-center justify-center">
-            <div className="bg-primary/90 rounded-full p-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-primary/90 rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -60,25 +60,26 @@ function WatchHistoryEntry({ historyItem, anime, onRemove }: WatchHistoryEntryPr
         </div>
       </Link>
       
-      <div className="p-4 md:p-6 flex-1 lg:w-1/2 flex flex-col justify-between">
+      <div className="p-3 flex-1 w-3/5 flex flex-col justify-center">
         <div>
           <Link href={`/anime/${anime.id}`}>
             <span 
-              className="text-lg font-medium hover:text-primary transition-colors cursor-pointer"
+              className="text-base font-semibold hover:text-primary transition-colors cursor-pointer block"
               onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 10)}
             >
               {anime.anime_name}
             </span>
           </Link>
-          <p className="text-muted-foreground">Episode {episode.episode_number}: {episode.title}</p>
-          <p className="text-sm text-muted-foreground mt-1">Watched on {formattedDate} at {formattedTime}</p>
-        </div>
-        
-        <div className="flex justify-end items-center mt-4">
-          <Button variant="ghost" size="sm" onClick={onRemove}>
-            <Trash2 className="h-4 w-4 mr-1" />
-            Remove
-          </Button>
+          
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+            Episode {episode.episode_number}: {episode.title || 'No Title'}
+          </p>
+          
+          <div className="flex justify-end items-center mt-2">
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={onRemove}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -109,9 +110,14 @@ export default function HistoryPage() {
     setUpdateTrigger(prev => prev + 1);
   };
   
+  // Sort history by most recent first
+  const sortedHistory = [...history].sort((a, b) => {
+    return new Date(b.lastWatched).getTime() - new Date(a.lastWatched).getTime();
+  });
+  
   // Group history by day
   const groupedHistory: Record<string, WatchHistoryItem[]> = {};
-  history.forEach(item => {
+  sortedHistory.forEach(item => {
     const date = new Date(item.lastWatched).toLocaleDateString();
     if (!groupedHistory[date]) {
       groupedHistory[date] = [];
@@ -121,9 +127,9 @@ export default function HistoryPage() {
   
   return (
     <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Watch History</h1>
-        <div className="flex gap-2">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-4">Watch History</h1>
+        <div className="flex flex-wrap gap-2 md:mt-0">
           <Button variant="outline" onClick={() => setUpdateTrigger(prev => prev + 1)}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -177,10 +183,15 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedHistory).map(([date, items]) => (
+          {Object.entries(groupedHistory)
+            .sort((a, b) => {
+              // Sort dates in descending order (newest first)
+              return new Date(b[0]).getTime() - new Date(a[0]).getTime();
+            })
+            .map(([date, items]) => (
             <div key={date}>
               <h2 className="text-lg font-medium mb-4 border-b border-muted pb-2">{date}</h2>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {items.map((item) => {
                   const anime = animes.find((a: Anime) => a.id === item.animeId);
                   return (

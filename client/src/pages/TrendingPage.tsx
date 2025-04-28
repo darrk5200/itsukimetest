@@ -4,7 +4,7 @@ import { Anime } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 
 export default function TrendingPage() {
-  const { isLoading, data: animes = [] } = useQuery({
+  const { isLoading, data: animes = [] } = useQuery<Anime[]>({
     queryKey: ['/api/animes'],
     refetchOnWindowFocus: false,
   });
@@ -23,20 +23,20 @@ export default function TrendingPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        <p className="mt-4 text-muted-foreground">Loading trending anime...</p>
+        <p className="mt-4 text-muted-foreground">Loading popular anime...</p>
       </div>
     );
   }
   
   return (
     <div className="p-4 pb-20">
-      <h1 className="text-2xl font-bold mb-6">Trending Anime</h1>
+      <h1 className="text-2xl font-bold mb-6">Popular Anime</h1>
       
       {trendingAnimes.length > 0 ? (
         <AnimeListGrid animes={trendingAnimes} />
       ) : (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No trending anime found</p>
+          <p className="text-muted-foreground">No popular anime found</p>
         </div>
       )}
     </div>

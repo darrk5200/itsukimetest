@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimeListGrid } from '@/components/AnimeCard';
+import { PopularScoreboard } from '@/components/PopularScoreboard';
 import { Anime } from '@/lib/types';
 import { getFirstN, getRandomItemsFromArray, getMostRecent, getAnimesByLatestEpisode } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
@@ -24,8 +25,8 @@ function HeroSlide({ anime }: { anime: Anime }) {
         alt={anime.anime_name} 
         className="w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
-      <div className="absolute bottom-0 left-0 p-4 md:p-6">
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent select-none"></div>
+      <div className="absolute bottom-0 left-0 p-4 md:p-6 select-none">
         <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs md:text-sm mb-2 inline-block">
           FEATURED
         </span>
@@ -106,7 +107,7 @@ function FeaturedCarousel({ animes }: { animes: Anime[] }) {
   }, [api]);
   
   return (
-    <section className="mb-8">
+    <section className="mb-8 select-none">
       <Carousel 
         setApi={setApi} 
         className="w-full" 
@@ -130,23 +131,87 @@ function FeaturedCarousel({ animes }: { animes: Anime[] }) {
 }
 
 export default function HomePage() {
-  const { isLoading, data: animes = [] } = useQuery({
+  // Prevent developer tools from being opened with keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent F12 key
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Prevent Ctrl+Shift+I / Cmd+Option+I
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Prevent Ctrl+Shift+J / Cmd+Option+J (for console)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Prevent Ctrl+Shift+C / Cmd+Option+C (for element inspector)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        e.preventDefault();
+        return false;
+      }
+      
+      return true;
+    };
+    
+    // Prevent right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      // Only disable context menu on carousel and certain elements
+      const target = e.target as HTMLElement;
+      if (target.closest('.select-none')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+    
+    // Add event listeners when component mounts
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+    
+    // Clean up when component unmounts
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+  
+  const { isLoading: animesLoading, data: animes = [] } = useQuery<Anime[]>({
     queryKey: ['/api/animes'],
+    refetchOnWindowFocus: false,
+  });
+  
+  const { isLoading: weeklyLoading, data: weeklyAnimes = [] } = useQuery<Anime[]>({
+    queryKey: ['/api/animes/weekly/popular'],
     refetchOnWindowFocus: false,
   });
 
   // Prepare anime categories
   const [featuredAnimes, setFeaturedAnimes] = useState<Anime[]>([]);
   const [trendingAnimes, setTrendingAnimes] = useState<Anime[]>([]);
+  const [weeklyPopularAnimes, setWeeklyPopularAnimes] = useState<Anime[]>([]);
   const [recommendedAnimes, setRecommendedAnimes] = useState<Anime[]>([]);
   const [recentAnimes, setRecentAnimes] = useState<Anime[]>([]);
+  
+  // Set weekly popular animes when API responds
+  useEffect(() => {
+    if (weeklyAnimes && weeklyAnimes.length > 0) {
+      setWeeklyPopularAnimes(weeklyAnimes);
+    }
+  }, [weeklyAnimes]);
   
   useEffect(() => {
     if (animes && animes.length > 0) {
       // Select 5 random animes for the featured carousel
       setFeaturedAnimes(getRandomItemsFromArray(animes, 5));
       
-      // Set trending animes (could be based on some metric, using random for demo)
+      // Set popular animes (could be based on some metric, using random for demo)
       setTrendingAnimes(getRandomItemsFromArray(animes, 5));
       
       // Get watch history for recommendations
@@ -189,6 +254,8 @@ export default function HomePage() {
     }
   }, [animes]);
   
+  const isLoading = animesLoading || weeklyLoading;
+  
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -198,7 +265,7 @@ export default function HomePage() {
     );
   }
   
-  if (!animes || animes.length === 0) {
+  if (!isLoading && (!animes || animes.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h2 className="text-2xl font-bold mb-4">No Anime Found</h2>
@@ -213,9 +280,16 @@ export default function HomePage() {
       
       <AnimeListGrid 
         animes={trendingAnimes} 
-        title="Trending" 
+        title="Popular" 
         viewAllLink="/trending"
       />
+      
+      {weeklyPopularAnimes.length > 0 && (
+        <PopularScoreboard 
+          animes={weeklyPopularAnimes} 
+          className="mt-8"
+        />
+      )}
       
       <AnimeListGrid 
         animes={recentAnimes} 

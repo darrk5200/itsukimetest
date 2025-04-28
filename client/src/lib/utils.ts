@@ -40,7 +40,7 @@ export function getMostRecent<T extends { id: number }>(array: T[], count: numbe
 }
 
 // Sort animes by their latest episode addition using lastEpisodeTimestamp
-export function getAnimesByLatestEpisode(animes: Array<{lastEpisodeTimestamp?: string, episodes: Array<{id: number}>}>, count: number): typeof animes {
+export function getAnimesByLatestEpisode<T extends {lastEpisodeTimestamp?: string, episodes: Array<{id: number}>}>(animes: T[], count: number): T[] {
   return [...animes].sort((a, b) => {
     // If lastEpisodeTimestamp exists, use it for sorting
     if (a.lastEpisodeTimestamp && b.lastEpisodeTimestamp) {

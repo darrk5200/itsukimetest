@@ -91,7 +91,7 @@ export function setTheme(theme: 'dark' | 'light'): void {
   }
 }
 
-// Watch Later Functions
+// Bookmarks Functions
 export function getWatchLaterList(): number[] {
   try {
     const watchLater = localStorage.getItem(WATCH_LATER_KEY);

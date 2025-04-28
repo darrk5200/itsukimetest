@@ -9,6 +9,8 @@ export interface Anime {
   description: string;
   episodes: Episode[];
   lastEpisodeTimestamp?: string; // ISO date string for most recent episode
+  viewCount?: number; // Total all-time view count
+  weeklyViews?: number; // Views for the current week
 }
 
 export interface Episode {
