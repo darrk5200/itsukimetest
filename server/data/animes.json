@@ -11,7 +11,7 @@
     "lastEpisodeTimestamp": "2025-04-26T09:42:00",
     "episodes": [
       {
-        "id": 101,
+        "id": 1,
         "episode_number": 1,
         "title": "Flashing Back",
         "video_url": "https://am.animeheaven.me/video.mp4?dfee86053d934f2444334bf37a864811&8f46245db9633aa71fc819ee3fffb595",
@@ -19,7 +19,7 @@
         "duration": 1372
       },
       {
-        "id": 102,
+        "id": 2,
         "episode_number": 2,
         "title": "Palm of the Hand",
         "video_url": "https://am.animeheaven.me/video.mp4?5f548e1228dcc102ec30165643dbb033&8f46245db9633aa7bd4c535e808052f1",
@@ -33,14 +33,14 @@
     "anime_name": "Overflow",
     "coverpage": "https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/overflow_cover.png",
     "episode_count": 8,
-    "releasedEpisodes": 2,
+    "releasedEpisodes": 8,
     "releaseDate": "2020-07-01",
     "genres": ["Slice of Life"],
     "description": "This is a young romantic comedy that won’t let you say, “it’s over!”",
     "lastEpisodeTimestamp": "2024-04-26T13:25:00+06:00",
     "episodes": [
       {
-        "id": 901,
+        "id": 1,
         "episode_number": 1,
         "title": "The Sisters",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_01.mp4",
@@ -48,7 +48,7 @@
         "duration": 421
       },
       {
-        "id": 902,
+        "id": 2,
         "episode_number": 2,
         "title": "An Apology",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_02.mp4",
@@ -56,7 +56,7 @@
         "duration": 396
       },
       {
-        "id": 903,
+        "id": 3,
         "episode_number": 3,
         "title": "3",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_03.mp4",
@@ -64,7 +64,7 @@
         "duration": 397
       },
       {
-        "id": 904,
+        "id": 4,
         "episode_number": 4,
         "title": "4",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_04.mp4",
@@ -72,7 +72,7 @@
         "duration": 445
       },
       {
-        "id": 905,
+        "id": 5,
         "episode_number": 5,
         "title": "5",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_05.mp4",
@@ -80,7 +80,7 @@
         "duration": 391
       },
       {
-        "id": 906,
+        "id": 6,
         "episode_number": 6,
         "title": "6",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_06.mp4",
@@ -88,7 +88,7 @@
         "duration": 440
       },
       {
-        "id": 907,
+        "id": 7,
         "episode_number": 7,
         "title": "7",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_07.mp4",
@@ -96,12 +96,57 @@
         "duration": 430
       },
       {
-        "id": 908,
+        "id": 8,
         "episode_number": 8,
         "title": "8",
         "video_url": "https://github.com/darrk5200/website-images/raw/refs/heads/main/overflow_08.mp4",
         "thumbnail": "https://raw.githubusercontent.com/darrk5200/website-images/refs/heads/main/overflow_thumbnail_08.png",
         "duration": 428
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "anime_name": "Please Put Them On, Takamine-san",
+    "coverpage": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx179965-EwqzG3xSyxwc.jpg",
+    "episode_count": 12,
+    "releasedEpisodes": 1,
+    "releaseDate": "2025-04-02",
+    "genres": ["Comedy","Ecchi", "Romance", "Slice of Life"],
+    "description": "Takane Takamine is the goddess of her high school. With perfect grades, athletic prowess, and unrivaled beauty, this student council president is the apple of everyone's eye-including Koushi Shirota, a below-average student with no friends or social prospects whatsoever. But he'll soon find out the secret behind Takamine's unbelievable success-her underwear! When she strips, she can undo any of her past actions, and now that Koushi knows, Takamine won't let him off so easy...",
+    "lastEpisodeTimestamp": "2025-05-03T20:30:00",
+    "episodes": [
+      {
+        "id": 1,
+        "episode_number": 1,
+        "title": "Become my closet",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_01.mp4",
+        "thumbnail": "https://github.com/itsukihme/A7f3K9t2Wq8L1xZ0/raw/refs/heads/main/thumbnail.webp",
+        "duration": 1370
+      },
+      {
+        "id": 2,
+        "episode_number": 2,
+        "title": "Let me Redo it until I'm satisfied",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_02.mp4",
+        "thumbnail": "https://image.tmdb.org/t/p/w500/i2RcftA8HXFl7CFNSIskOHpQUsJ.jpg",
+        "duration": 1380
+      },
+      {
+        "id": 3,
+        "episode_number": 3,
+        "title": "I want you to Enjoy the Best",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_03.mp4",
+        "thumbnail": "https://image.tmdb.org/t/p/w500/5GHavm14YsQnNl8LKCmLuBH1kiA.jpg",
+        "duration": 1420
+      },
+      {
+        "id": 4,
+        "episode_number": 4,
+        "title": "Don't be Dense, Be Sharp",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_04.mp4",
+        "thumbnail": "https://image.tmdb.org/t/p/w500/pm83AhFdeF2pqiW6mLxuUjUwNSC.jpg",
+        "duration": 1419
       }
     ]
   }
