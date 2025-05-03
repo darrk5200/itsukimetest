@@ -172,12 +172,29 @@ function VideoPlayerComponent({
     setHasError(false);
     setErrorMessage("");
     setIsLoading(true);
+    setViewTracked(false); // Reset view tracking when switching episodes
+    
+    // Reset the player's state
+    setProgress(0);
+    setCurrentTime(0);
     
     // Set initial volume
     video.volume = volume;
     
-    // Load the video
-    video.load();
+    // Wait for a brief moment to ensure the DOM is updated with the new src
+    setTimeout(() => {
+      // Ensure the video element is still valid
+      if (videoRef.current) {
+        // Reset the source and load the new one
+        videoRef.current.src = src;
+        videoRef.current.load();
+        
+        // Try to autoplay if possible
+        videoRef.current.play().catch(err => {
+          console.warn('Autoplay prevented:', err);
+        });
+      }
+    }, 50);
     
     // Start control visibility timer
     startControlsTimer();
@@ -495,7 +512,6 @@ function VideoPlayerComponent({
           <video
             ref={videoRef}
             className={`absolute inset-0 w-full h-full cursor-pointer ${hasError ? 'opacity-30' : ''}`}
-            src={src}
             poster={poster}
             onClick={hasError ? undefined : togglePlay}
             onTouchEnd={(e) => {

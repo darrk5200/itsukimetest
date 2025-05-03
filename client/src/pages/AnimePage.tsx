@@ -267,16 +267,16 @@ export default function AnimePage({ params }: AnimePageProps) {
       {currentEpisode && (
         <div className="p-4 md:p-6">
           {/* Episode Title and Info - Visible above the video */}
-          <div className="bg-card rounded-lg p-4 mb-6">
+          <div id="episodeTitleContainer" className="bg-card rounded-lg p-4 mb-6">
             <h2 className="text-2xl font-bold">
               Episode {currentEpisode.episode_number}: {currentEpisode.title}
             </h2>
           </div>
           
           {/* Responsive layout - stacked on mobile, side-by-side on desktop */}
-          <div className="flex flex-col md:flex-row md:h-[565px] gap-6 mb-12">
+          <div id="videoPlayerContainer" className="flex flex-col md:flex-row md:h-[500px] gap-6 mb-12">
             {/* Video Player (full width on mobile, 2/3 on desktop) */}
-            <div className="w-full md:w-3/4 md:h-full">
+            <div className="w-full md:w-[calc(80%-60px)] md:h-full">
               <VideoPlayer
                 src={currentEpisode.video_url}
                 poster={currentEpisode.thumbnail}
@@ -289,7 +289,7 @@ export default function AnimePage({ params }: AnimePageProps) {
             </div>
             
             {/* Right side: Episodes List (hidden on mobile, vertical list on desktop) */}
-            <div className="hidden md:block md:w-1/4 bg-background/50 rounded-md flex flex-col h-full">
+            <div className="hidden md:block md:w-[calc(20%+60px)] bg-background/50 rounded-md flex flex-col h-full">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h2 className="font-bold text-sm">EPS 1-{anime.episodes.length}</h2>
@@ -308,17 +308,21 @@ export default function AnimePage({ params }: AnimePageProps) {
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto side-panel py-2">
-                {anime.episodes.map((episode) => (
+              <div className="flex-1 overflow-y-auto side-panel py-2 max-h-[380px]">
+                {anime.episodes.slice(0, 50).map((episode) => (
                   <Link key={episode.id} href={`/anime/${anime.id}/episode/${episode.id}`} onClick={(e) => {
                     e.preventDefault();
                     navigate(`/anime/${anime.id}/episode/${episode.id}`);
+                    // Scroll to episode title
+                    setTimeout(() => {
+                      document.getElementById('episodeTitleContainer')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
                   }}>
                     <div className={cn(
-                      "flex gap-3 p-2 hover:bg-muted/50 transition-colors",
-                      episode.id === currentEpisode.id && "bg-muted"
+                      "flex gap-3 p-2 hover:bg-muted/50 transition-colors h-[85px] mb-2 border-b border-border/50 rounded",
+                      episode.id === currentEpisode.id && "bg-muted border-primary/30"
                     )}>
-                      <div className="relative w-24 h-16">
+                      <div className="relative w-20 h-[70px] flex-shrink-0">
                         <img 
                           src={episode.thumbnail || anime.coverpage} 
                           alt={episode.title} 
@@ -358,11 +362,14 @@ export default function AnimePage({ params }: AnimePageProps) {
               )}
             </div>
             
-            <EpisodeList
-              episodes={anime.episodes}
-              animeId={anime.id}
-              activeEpisodeId={currentEpisode?.id}
-            />
+            <div className="max-h-[350px] overflow-y-auto pb-4 side-panel">
+              <EpisodeList
+                episodes={anime.episodes}
+                animeId={anime.id}
+                activeEpisodeId={currentEpisode?.id}
+                className="pr-2"
+              />
+            </div>
           </div>
           
           {/* Comments Section */}
@@ -384,8 +391,12 @@ export default function AnimePage({ params }: AnimePageProps) {
                 >
                   <div 
                     className="anime-card bg-card rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105 cursor-pointer"
-                    onClick={() => {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/anime/${similarAnime.id}`);
+                      setTimeout(() => {
+                        document.getElementById('episodeTitleContainer')?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
                     }}
                   >
                     <div className="relative">
