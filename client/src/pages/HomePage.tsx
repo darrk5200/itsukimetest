@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { AnimeListGrid } from '@/components/AnimeCard';
 import { PopularScoreboard } from '@/components/PopularScoreboard';
 import { Anime } from '@/lib/types';
-import { getFirstN, getRandomItemsFromArray, getMostRecent, getAnimesByLatestEpisode } from '@/lib/utils';
+import { 
+  getFirstN, 
+  getRandomItemsFromArray, 
+  getMostRecent, 
+  getAnimesByLatestEpisode,
+  checkForNewEpisodeNotifications
+} from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
@@ -140,7 +146,7 @@ export default function HomePage() {
         return false;
       }
       
-      // Prevent Ctrl+Shift+I / Cmd+Option+I
+      // Prevent Ctrl+Shift+I / Cmd+Option+I (for developer tools)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
         e.preventDefault();
         return false;
@@ -158,14 +164,37 @@ export default function HomePage() {
         return false;
       }
       
+      // Prevent Alt+Cmd+I (Mac developer tools)
+      if ((e.altKey || e.metaKey) && (e.key === 'I' || e.key === 'i')) {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Prevent Ctrl+U (view source)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+        e.preventDefault();
+        return false;
+      }
+      
       return true;
     };
     
     // Prevent right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
-      // Only disable context menu on carousel and certain elements
+      // Block context menu for all elements
+      e.preventDefault();
+      return false;
+    };
+    
+    // Disable "Inspect" option handler
+    const handleInspect = () => {
+      return false;
+    };
+
+    // Disable copy/paste on video elements
+    const handleCopyPaste = (e: ClipboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('.select-none')) {
+      if (target.tagName === 'VIDEO' || target.closest('video')) {
         e.preventDefault();
         return false;
       }
@@ -174,11 +203,21 @@ export default function HomePage() {
     // Add event listeners when component mounts
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopyPaste);
+    document.addEventListener('paste', handleCopyPaste);
+    
+    // Import and use the security measures utility
+    // This will handle all devtools prevention and content protection
+    import('@/lib/utils').then(utils => {
+      utils.setupSecurityMeasures();
+    });
     
     // Clean up when component unmounts
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopyPaste);
+      document.removeEventListener('paste', handleCopyPaste);
     };
   }, []);
   
@@ -251,6 +290,10 @@ export default function HomePage() {
         timestamp: a.lastEpisodeTimestamp
       })));
       setRecentAnimes(sortedByTimestamp);
+      
+      // Check for new episode notifications, but only for episodes that were released
+      // AFTER the user enabled notifications for specific animes
+      checkForNewEpisodeNotifications(animes);
     }
   }, [animes]);
   

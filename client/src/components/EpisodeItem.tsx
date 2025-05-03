@@ -74,9 +74,16 @@ interface EpisodeListProps {
   animeId: number;
   activeEpisodeId?: number;
   className?: string;
+  layout?: 'grid' | 'vertical'; // Add layout prop to control display style
 }
 
-export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: EpisodeListProps) {
+export function EpisodeList({ 
+  episodes, 
+  animeId, 
+  activeEpisodeId, 
+  className,
+  layout = 'grid' // Default to grid layout
+}: EpisodeListProps) {
   const [, navigate] = useLocation();
   const [currentPage, setCurrentPage] = useState(0);
   const [episodeNumber, setEpisodeNumber] = useState('');
@@ -184,56 +191,98 @@ export function EpisodeList({ episodes, animeId, activeEpisodeId, className }: E
         </form>
       </div>
       
-      <div className="mb-2 max-h-[350px] overflow-y-auto side-panel">
-        <div className={cn(
-          "grid gap-3 pr-2", 
-          "grid-cols-2", // xs default
-          "sm:grid-cols-3", // sm breakpoint
-          "md:grid-cols-4", // md breakpoint in main layout
-          "lg:grid-cols-5", // lg in main layout
-          // Side panel needs fewer columns
-          "[.side-panel_&]:md:grid-cols-2",
-          "[.side-panel_&]:lg:grid-cols-3"
-        )}>
-          {currentEpisodes.map((episode) => (
-            <EpisodeItem
-              key={episode.id}
-              episode={episode}
-              animeId={animeId}
-              isActive={episode.id === activeEpisodeId}
-            />
-          ))}
-        </div>
+      <div className="mb-2 max-h-[270px] overflow-y-auto side-panel">
+        {layout === 'vertical' ? (
+          // Vertical list layout for mobile
+          <div className="flex flex-col gap-3 pr-2">
+            {episodes.map((episode) => (
+              <div
+                key={episode.id}
+                className={cn(
+                  "episode-item border border-muted rounded-lg overflow-hidden transition-colors hover:border-primary cursor-pointer",
+                  episode.id === activeEpisodeId && "active"
+                )}
+                onClick={() => {
+                  navigate(`/anime/${animeId}/episode/${episode.id}`);
+                  setTimeout(() => {
+                    document.getElementById('episodeTitleContainer')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                <div className="flex p-2 h-full">
+                  <div className="relative w-[120px] h-[67px] flex-shrink-0 mr-3">
+                    <img 
+                      src={episode.thumbnail} 
+                      alt={`Episode ${episode.episode_number}`} 
+                      className="w-full h-full object-cover rounded" 
+                      loading="lazy"
+                    />
+                    <div className="absolute bottom-1 right-1 bg-primary text-white text-xs px-1 rounded">
+                      {formatDuration(episode.duration)}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="text-xs sm:text-sm font-medium">Episode {episode.episode_number}</div>
+                    <div className="text-xs text-muted-foreground truncate">{episode.title}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Grid layout (default)
+          <div className={cn(
+            "grid gap-3 pr-2", 
+            "grid-cols-2", // xs default
+            "sm:grid-cols-3", // sm breakpoint
+            "md:grid-cols-4", // md breakpoint in main layout
+            "lg:grid-cols-5", // lg in main layout
+            // Side panel needs fewer columns
+            "[.side-panel_&]:md:grid-cols-2",
+            "[.side-panel_&]:lg:grid-cols-3"
+          )}>
+            {currentEpisodes.map((episode) => (
+              <EpisodeItem
+                key={episode.id}
+                episode={episode}
+                animeId={animeId}
+                isActive={episode.id === activeEpisodeId}
+              />
+            ))}
+          </div>
+        )}
       </div>
       
-      {/* Pagination Controls */}
-      <div className="flex justify-center mt-4">
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={goToPrevPage}
-            disabled={currentPage === 0}
-            className={cn(
-              "p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors",
-              currentPage === 0 && "opacity-50 cursor-not-allowed"
-            )}
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          
-          <button 
-            onClick={goToNextPage}
-            disabled={currentPage >= totalPages - 1}
-            className={cn(
-              "p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors",
-              currentPage >= totalPages - 1 && "opacity-50 cursor-not-allowed"
-            )}
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+      {/* Pagination Controls - Only show for grid layout */}
+      {layout === 'grid' && (
+        <div className="flex justify-center mt-4">
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={goToPrevPage}
+              disabled={currentPage === 0}
+              className={cn(
+                "p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors",
+                currentPage === 0 && "opacity-50 cursor-not-allowed"
+              )}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            
+            <button 
+              onClick={goToNextPage}
+              disabled={currentPage >= totalPages - 1}
+              className={cn(
+                "p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors",
+                currentPage >= totalPages - 1 && "opacity-50 cursor-not-allowed"
+              )}
+              aria-label="Next page"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

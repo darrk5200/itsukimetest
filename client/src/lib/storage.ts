@@ -5,6 +5,7 @@ const WATCH_HISTORY_KEY = 'itsukime_watch_history';
 const THEME_KEY = 'itsukime_theme';
 const WATCH_LATER_KEY = 'itsukime_watch_later';
 const NOTIFY_KEY = 'itsukime_notify';
+const NOTIFY_TIMESTAMPS_KEY = 'itsukime_notify_timestamps'; // Tracks when notifications were enabled for each anime
 const NOTIFICATIONS_KEY = 'itsukime_notifications';
 const COMMENTS_KEY = 'itsukime_comments';
 const USER_NAME_KEY = 'itsukime_user_name';
@@ -185,6 +186,61 @@ export function removeFromNotify(animeId: number): void {
   }
 }
 
+// Notification timestamp functions
+export interface NotifyTimestamp {
+  animeId: number;
+  timestamp: string; // ISO string
+}
+
+export function getNotifyTimestamps(): NotifyTimestamp[] {
+  try {
+    const timestamps = localStorage.getItem(NOTIFY_TIMESTAMPS_KEY);
+    return timestamps ? JSON.parse(timestamps) : [];
+  } catch (error) {
+    console.error('Failed to get notify timestamps:', error);
+    return [];
+  }
+}
+
+export function getNotifyTimestampForAnime(animeId: number): string | null {
+  try {
+    const timestamps = getNotifyTimestamps();
+    const entry = timestamps.find(t => t.animeId === animeId);
+    return entry ? entry.timestamp : null;
+  } catch (error) {
+    console.error('Failed to get notify timestamp for anime:', error);
+    return null;
+  }
+}
+
+export function saveNotifyTimestamp(animeId: number): void {
+  try {
+    const timestamps = getNotifyTimestamps();
+    // Remove existing entry if any
+    const filteredTimestamps = timestamps.filter(t => t.animeId !== animeId);
+    
+    // Add new timestamp
+    filteredTimestamps.push({
+      animeId,
+      timestamp: new Date().toISOString()
+    });
+    
+    localStorage.setItem(NOTIFY_TIMESTAMPS_KEY, JSON.stringify(filteredTimestamps));
+  } catch (error) {
+    console.error('Failed to save notify timestamp:', error);
+  }
+}
+
+export function removeNotifyTimestamp(animeId: number): void {
+  try {
+    const timestamps = getNotifyTimestamps();
+    const filteredTimestamps = timestamps.filter(t => t.animeId !== animeId);
+    localStorage.setItem(NOTIFY_TIMESTAMPS_KEY, JSON.stringify(filteredTimestamps));
+  } catch (error) {
+    console.error('Failed to remove notify timestamp:', error);
+  }
+}
+
 export function toggleNotify(animeId: number): boolean {
   try {
     const notifyList = getNotifyList();
@@ -192,9 +248,11 @@ export function toggleNotify(animeId: number): boolean {
     
     if (isInList) {
       removeFromNotify(animeId);
+      removeNotifyTimestamp(animeId);
       return false;
     } else {
       addToNotify(animeId);
+      saveNotifyTimestamp(animeId);
       return true;
     }
   } catch (error) {

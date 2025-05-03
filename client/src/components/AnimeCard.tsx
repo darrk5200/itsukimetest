@@ -1,7 +1,12 @@
 import { Link } from 'wouter';
 import { Play, ChevronLeft, ChevronRight, BookmarkPlus, CheckCircle2, Bell } from 'lucide-react';
 import { Anime } from '@/lib/types';
-import { cn, isWithinDaysInGMT6 } from '@/lib/utils';
+import { 
+  cn, 
+  isWithinDaysInGMT6, 
+  hasWatchedLatestEpisode,
+  wasReleasedAfterNotificationEnabled
+} from '@/lib/utils';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { isInWatchLater, toggleWatchLater, isInNotify, toggleNotify, addNotification } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -65,18 +70,13 @@ function AnimeCardComponent({ anime, isNew = false, className }: AnimeCardProps)
     const added = toggleNotify(anime.id);
     setIsNotified(added);
     
-    // If user enables notifications, add notification for latest episode if it's new
-    if (added && anime.lastEpisodeTimestamp) {
-      // Use our GMT+6 timezone utility to check if this is a recent episode
-      if (isWithinDaysInGMT6(anime.lastEpisodeTimestamp, 3)) {
-        addNotification({
-          animeId: anime.id,
-          animeName: anime.anime_name,
-          message: `New episode ${anime.releasedEpisodes} is available to watch!`,
-          episodeId: anime.episodes[anime.releasedEpisodes - 1]?.id
-        });
-      }
-    }
+    // When notifications are enabled, we don't immediately show 
+    // notifications for existing episodes. We'll only show notifications
+    // for episodes that are released AFTER enabling notifications.
+    
+    // We don't need to do anything else here since we've saved the timestamp when 
+    // notifications were enabled.
+    // New episodes will be checked against this timestamp when they're released.
     
     toast({
       title: added ? "Notifications Enabled" : "Notifications Disabled",

@@ -18,7 +18,12 @@ import {
   toggleNotify, 
   addNotification 
 } from '@/lib/storage';
-import { getRandomItemsFromArray, isWithinDaysInGMT6 } from '@/lib/utils';
+import { 
+  getRandomItemsFromArray, 
+  isWithinDaysInGMT6, 
+  hasWatchedLatestEpisode,
+  wasReleasedAfterNotificationEnabled
+} from '@/lib/utils';
 
 // Format duration in minutes to MM:SS format
 function formatDuration(minutes: number): string {
@@ -66,6 +71,9 @@ export default function AnimePage({ params }: AnimePageProps) {
   
   // Notify state
   const [isNotified, setIsNotified] = useState(animeId ? isInNotify(animeId) : false);
+  
+  // Description expand/collapse state
+  const [description, setDescription] = useState({ expanded: false });
   
   // Handle episode change
   useEffect(() => {
@@ -149,12 +157,17 @@ export default function AnimePage({ params }: AnimePageProps) {
       {/* Anime Banner and Info */}
       <div className="bg-card relative">
         <div className="relative" style={{ height: '500px' }}>
-          <img 
-            src={anime.coverpage} 
-            alt={`${anime.anime_name} Banner`} 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent"></div>
+          <div className="relative w-full h-full">
+            <img 
+              src={anime.coverpage} 
+              alt={`${anime.anime_name} Banner`} 
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay with different opacity based on description state */}
+            <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${description.expanded ? 'opacity-80' : 'opacity-50'}`}></div>
+            {/* Bottom gradient to ensure text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+          </div>
           
           <div className="absolute bottom-0 left-0 p-6 flex flex-col md:flex-row items-start md:items-end gap-6">
             <div className="w-32 h-48 rounded-lg overflow-hidden shadow-lg">
@@ -174,7 +187,21 @@ export default function AnimePage({ params }: AnimePageProps) {
                   </span>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4 max-w-3xl">{anime.description}</p>
+              <div className="flex flex-col mt-4 mb-4 max-w-3xl">
+                <p className="text-muted-foreground">
+                  {description.expanded 
+                    ? anime.description 
+                    : anime.description.slice(0, 100) + (anime.description.length > 100 ? '...' : '')}
+                </p>
+                {anime.description.length > 100 && (
+                  <button 
+                    onClick={() => setDescription(prev => ({ expanded: !prev.expanded }))} 
+                    className="text-primary text-sm mt-2 self-start font-medium hover:underline"
+                  >
+                    {description.expanded ? 'LESS' : 'MORE'}
+                  </button>
+                )}
+              </div>
               
               <div className="flex flex-wrap gap-6 mb-4 text-sm text-muted-foreground">
                 <div>
@@ -196,18 +223,14 @@ export default function AnimePage({ params }: AnimePageProps) {
                   onClick={() => {
                     const added = toggleNotify(anime.id);
                     setIsNotified(added);
-                    // If user enables notifications, add notification for latest episode if it's new
-                    if (added && anime.lastEpisodeTimestamp) {
-                      // Use our GMT+6 timezone utility to check if this is a recent episode
-                      if (isWithinDaysInGMT6(anime.lastEpisodeTimestamp, 3)) {
-                        addNotification({
-                          animeId: anime.id,
-                          animeName: anime.anime_name,
-                          message: `New episode ${anime.releasedEpisodes} is available to watch!`,
-                          episodeId: anime.episodes[anime.releasedEpisodes - 1]?.id
-                        });
-                      }
-                    }
+                    
+                    // When notifications are enabled, we don't immediately show 
+                    // notifications for existing episodes. We'll only show notifications
+                    // for episodes that are released AFTER enabling notifications.
+                    
+                    // We don't need to do anything else here since we've saved the timestamp when 
+                    // notifications were enabled.
+                    // New episodes will be checked against this timestamp when they're released.
                     
                     toast({
                       title: added ? "Notifications Enabled" : "Notifications Disabled",
@@ -257,6 +280,7 @@ export default function AnimePage({ params }: AnimePageProps) {
                     </>
                   )}
                 </Button>
+
               </div>
             </div>
           </div>
@@ -322,7 +346,7 @@ export default function AnimePage({ params }: AnimePageProps) {
                       "flex gap-3 p-2 hover:bg-muted/50 transition-colors h-[85px] mb-2 border-b border-border/50 rounded",
                       episode.id === currentEpisode.id && "bg-muted border-primary/30"
                     )}>
-                      <div className="relative w-20 h-[70px] flex-shrink-0">
+                      <div className="relative w-[120px] h-[70px] flex-shrink-0">
                         <img 
                           src={episode.thumbnail || anime.coverpage} 
                           alt={episode.title} 
@@ -362,12 +386,13 @@ export default function AnimePage({ params }: AnimePageProps) {
               )}
             </div>
             
-            <div className="max-h-[350px] overflow-y-auto pb-4 side-panel">
+            <div className="h-[270px] overflow-y-auto pb-4 side-panel mobile-episode-scroll">
               <EpisodeList
                 episodes={anime.episodes}
                 animeId={anime.id}
                 activeEpisodeId={currentEpisode?.id}
                 className="pr-2"
+                layout="vertical"
               />
             </div>
           </div>

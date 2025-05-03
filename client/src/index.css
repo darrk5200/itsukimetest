@@ -227,3 +227,249 @@
 .side-panel::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }
+
+/* Mobile Episode Container Vertical Scrolling */
+.mobile-episode-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary)) hsl(var(--muted));
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.mobile-episode-scroll::-webkit-scrollbar {
+  width: 4px; /* Thinner scrollbar for mobile */
+}
+
+.mobile-episode-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 2px;
+}
+
+.mobile-episode-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  /* Improved touch scrolling for mobile devices */
+  .mobile-episode-scroll {
+    height: 270px !important; /* Show several episodes at once */
+    padding-right: 8px; /* Add padding to avoid content being hidden by scrollbar */
+  }
+  
+  /* Remove extra scrollbars for nested scrollable elements */
+  .mobile-episode-scroll .side-panel {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  
+  /* Enhance mobile episode items for touch interactions */
+  .side-panel .episode-item {
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-left-width: 3px;
+    border-radius: 6px;
+    height: 76px; /* Fixed height for each episode item */
+  }
+  
+  /* Highlight active episodes more prominently */
+  .side-panel .episode-item.active {
+    border-left-width: 4px;
+    border-left-color: hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.1);
+  }
+  
+  /* Add hover effect for touch feedback */
+  .side-panel .episode-item:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--muted) / 0.7);
+  }
+}
+
+/* Security-related CSS */
+
+/* Prevent text selection, copying, and context menu on video player and sensitive elements */
+.video-container,
+.video-container *,
+.anime-card,
+.anime-card img,
+.anime-card *,
+nav,
+.carousel,
+.carousel-item,
+.featured,
+.featured *,
+.banner,
+.hero-slide,
+.header,
+.header *,
+video {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent save image as popup for all images */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* Allow pointer events on buttons that are images or contain images */
+button img,
+a img,
+.link img,
+.btn img {
+  pointer-events: auto;
+}
+
+/* Disable browser-specific features that could expose content */
+body {
+  -webkit-print-color-adjust: exact; /* Prevent print adjustments */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent CTRL+A select all */
+body {
+  -webkit-user-select: none; /* Disable user selection by default */
+}
+
+/* Only allow selection in text fields */
+input, 
+textarea, 
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Block inspector tools */
+__FIREFOX_DEVTOOLS_PLEASE_DONT_EXAMINE_THIS_CODE,
+__CHROME_DEVTOOLS_PLEASE_DONT_EXAMINE_THIS_CODE {
+  display: none !important;
+}
+
+/* Disable dragging for sensitive content */
+.video-player,
+video,
+.banner-image,
+.poster-image,
+.cover-image,
+.anime-card img,
+.episode-thumbnail {
+  draggable: false !important;
+}
+
+/* Disable selection on pseudo-elements */
+*::before,
+*::after {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Prevent browser inspection tools via F12 and context menu */
+@media print {
+  html, body {
+    display: none;  /* Hide content when trying to print/save */
+  }
+}
+
+/* Disable DevTools keyboard shortcuts */
+html {
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Block video URL access */
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel {
+  overflow: hidden !important;
+}
+
+video::-webkit-media-controls-current-time-display,
+video::-webkit-media-controls-time-remaining-display,
+video::-webkit-media-controls-timeline,
+video::-webkit-media-controls-volume-slider,
+video::-webkit-media-controls-mute-button,
+video::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+/* We need to remove this rule as it's hiding the video completely */
+/* video[src] {
+  object-position: -99999px 99999px;
+} */
+
+/* Allow custom controls while preserving video display */
+video::-webkit-media-controls,
+video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+/* Fancy Loader Animation */
+.fancy-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.loader-inner {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  animation: spin 2s linear infinite;
+}
+
+.loader-line-wrap {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: spin 2000ms cubic-bezier(.175, .885, .32, 1.275) infinite;
+}
+
+.loader-line {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  border-top-color: inherit;
+  animation: spinner 1500ms ease-in-out infinite;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.loader-line-wrap:nth-child(1) { animation-delay: -50ms; }
+.loader-line-wrap:nth-child(2) { animation-delay: -100ms; }
+.loader-line-wrap:nth-child(3) { animation-delay: -150ms; }
+.loader-line-wrap:nth-child(4) { animation-delay: -200ms; }
+.loader-line-wrap:nth-child(5) { animation-delay: -250ms; }
+
+.loader-line-wrap:nth-child(1) .loader-line { height: 90%; width: 90%; top: 5%; left: 5%; animation-delay: -50ms; }
+.loader-line-wrap:nth-child(2) .loader-line { height: 75%; width: 75%; top: 12.5%; left: 12.5%; animation-delay: -100ms; }
+.loader-line-wrap:nth-child(3) .loader-line { height: 60%; width: 60%; top: 20%; left: 20%; animation-delay: -150ms; }
+.loader-line-wrap:nth-child(4) .loader-line { height: 45%; width: 45%; top: 27.5%; left: 27.5%; animation-delay: -200ms; }
+.loader-line-wrap:nth-child(5) .loader-line { height: 30%; width: 30%; top: 35%; left: 35%; animation-delay: -250ms; }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spinner {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
