@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AnimeListGrid } from '@/components/AnimeCard';
+import { TrendingSection } from '@/components/TrendingSection';
 import { PopularScoreboard } from '@/components/PopularScoreboard';
 import { Anime } from '@/lib/types';
 import { 
@@ -321,12 +321,6 @@ export default function HomePage() {
     <div className="p-4 pb-20">
       {featuredAnimes.length > 0 && <FeaturedCarousel animes={featuredAnimes} />}
       
-      <AnimeListGrid 
-        animes={trendingAnimes} 
-        title="Popular" 
-        viewAllLink="/trending"
-      />
-      
       {weeklyPopularAnimes.length > 0 && (
         <PopularScoreboard 
           animes={weeklyPopularAnimes} 
@@ -334,14 +328,14 @@ export default function HomePage() {
         />
       )}
       
-      <AnimeListGrid 
+      <TrendingSection 
         animes={recentAnimes} 
         title="Recently Added" 
         viewAllLink="/recent"
         isNewTag
       />
       
-      <AnimeListGrid 
+      <TrendingSection 
         animes={recommendedAnimes} 
         title="Recommended For You" 
         viewAllLink="/recommended"

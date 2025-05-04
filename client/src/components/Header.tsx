@@ -12,7 +12,7 @@ export function Header() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   return (
-    <header className="bg-sidebar sticky top-0 z-20 border-b border-muted py-2">
+    <header className="bg-sidebar fixed top-0 left-0 right-0 z-50 border-b border-muted py-2">
       <div className="flex items-center justify-between px-4">
         {/* Sidebar toggle button in the header */}
         {!isDesktop && 

@@ -84,7 +84,7 @@ export default function SearchPage() {
                   <p className="text-sm text-muted-foreground">Try a different search term or browse categories</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-2 md:gap-4">
                   {filteredAnimes.map((anime) => (
                     <AnimeCard key={anime.id} anime={anime} />
                   ))}
@@ -98,7 +98,7 @@ export default function SearchPage() {
             <div className="mb-8">
               <h2 className="text-lg font-medium mb-4">Popular Categories</h2>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {["Action", "Comedy", "Drama", "Fantasy", "Romance", "Sci-Fi", "Slice of Life", "Supernatural"].map(
                   (category) => (
                     <Button
@@ -118,7 +118,7 @@ export default function SearchPage() {
             {animes && animes.length > 0 && (
               <div>
                 <h2 className="text-lg font-medium mb-4">Top Anime</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-2 md:gap-4">
                   {animes.slice(0, 10).map((anime) => (
                     <AnimeCard key={anime.id} anime={anime} />
                   ))}

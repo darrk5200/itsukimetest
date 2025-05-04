@@ -291,115 +291,150 @@ export async function testVideoSecurity(videoUrl: string): Promise<void> {
 
 export function setupSecurityMeasures(): void {
   try {
-    // Disable default browser behaviors
+    // Check if on mobile first - will be used for conditional security measures
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Disable right-click menu (contextmenu) except on mobile and form fields
     document.addEventListener('contextmenu', (e) => {
-      // Allow context menu on form inputs for accessibility
+      // Always allow context menu on form inputs for accessibility
       if (e.target instanceof HTMLInputElement || 
           e.target instanceof HTMLTextAreaElement) {
         return true;
       }
+      
+      // Also allow context menu on mobile devices for accessibility
+      if (isMobileDevice) {
+        return true;
+      }
+      
       e.preventDefault();
       return false;
     }, { capture: true });
     
     // Prevent key combinations that could open developer tools
-    document.addEventListener('keydown', (e) => {
-      // Block F12 key
-      if (e.key === 'F12' || e.keyCode === 123) {
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      // Block Ctrl+Shift+I (inspect element)
-      if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) ||
-          (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i'))) { // Also block Cmd+Option+I for Mac
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      // Block Ctrl+Shift+J (open console)
-      if ((e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) ||
-          (e.metaKey && e.altKey && (e.key === 'J' || e.key === 'j'))) {
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      // Block Ctrl+Shift+C (inspector mode)
-      if ((e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) ||
-          (e.metaKey && e.altKey && (e.key === 'C' || e.key === 'c'))) {
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      // Block Cmd+Option+U for Mac (view source)
-      if ((e.metaKey && e.altKey && (e.key === 'U' || e.key === 'u')) ||
-          (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85))) {
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      // Block Ctrl+S (save)
-      if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
-        e.stopPropagation();
-        e.preventDefault();
-        return false;
-      }
-      
-      return true;
-    }, { capture: true, passive: false });
-    
-    // Prevent copy operations for videos and sensitive content
-    document.addEventListener('copy', (e) => {
-      // Allow copying text from inputs for accessibility
-      if (e.target instanceof HTMLInputElement || 
-          e.target instanceof HTMLTextAreaElement) {
-        return true;
-      }
-      
-      // Check if we're copying from a video or image element
-      let element = e.target as HTMLElement;
-      while (element) {
-        if (element instanceof HTMLVideoElement || 
-            element instanceof HTMLImageElement || 
-            element.classList.contains('video-container') ||
-            element.classList.contains('anime-card')) {
+    // Only apply these restrictions on desktop browsers
+    if (!isMobileDevice) {
+      document.addEventListener('keydown', (e) => {
+        // Block F12 key
+        if (e.key === 'F12' || e.keyCode === 123) {
+          e.stopPropagation();
           e.preventDefault();
           return false;
         }
-        element = element.parentElement as HTMLElement;
-        if (!element) break;
-      }
-    }, { capture: true });
+        
+        // Block Ctrl+Shift+I (inspect element)
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) ||
+            (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i'))) { // Also block Cmd+Option+I for Mac
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        // Block Ctrl+Shift+J (open console)
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) ||
+            (e.metaKey && e.altKey && (e.key === 'J' || e.key === 'j'))) {
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        // Block Ctrl+Shift+C (inspector mode)
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) ||
+            (e.metaKey && e.altKey && (e.key === 'C' || e.key === 'c'))) {
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        // Block Cmd+Option+U for Mac (view source)
+        if ((e.metaKey && e.altKey && (e.key === 'U' || e.key === 'u')) ||
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85))) {
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        // Block Ctrl+S (save)
+        if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        }
+        
+        return true;
+      }, { capture: true, passive: false });
+    }
     
-    // Detect and react to DevTools - defined outside to avoid ES5 strict mode issues
+    // Prevent copy operations for videos and sensitive content
+    // Only for desktop, allow normal copy operations on mobile
+    if (!isMobileDevice) {
+      document.addEventListener('copy', (e) => {
+        // Allow copying text from inputs for accessibility
+        if (e.target instanceof HTMLInputElement || 
+            e.target instanceof HTMLTextAreaElement) {
+          return true;
+        }
+        
+        // Check if we're copying from a video or image element
+        let element = e.target as HTMLElement;
+        while (element) {
+          if (element instanceof HTMLVideoElement || 
+              element instanceof HTMLImageElement || 
+              element.classList.contains('video-container') ||
+              element.classList.contains('anime-card')) {
+            e.preventDefault();
+            return false;
+          }
+          element = element.parentElement as HTMLElement;
+          if (!element) break;
+        }
+      }, { capture: true });
+    }
+    
+    // Detect and react to DevTools - completely disable for mobile
     const detectDevTools = () => {
-      const widthThreshold = window.outerWidth - window.innerWidth > 160;
-      const heightThreshold = window.outerHeight - window.innerHeight > 160;
+      // Never run DevTools detection on mobile devices 
+      if (isMobileDevice) {
+        return;
+      }
       
-      if (widthThreshold || heightThreshold) {
-        // DevTools may be open
-        console.clear();
-        document.documentElement.innerHTML = `
-          <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; color: #fff; text-align: center;">
-            <div>
-              <h1 style="font-size: 24px;">Security Alert</h1>
-              <p style="margin-top: 20px;">Developer tools detected. Please close developer tools to continue using the application.</p>
-              <button onclick="window.location.reload()" style="margin-top: 20px; padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
-                Reload Application
-              </button>
+      try {
+        // More reliable check for desktop browsers
+        // These thresholds are for desktop only and would cause false positives on mobile
+        const widthThreshold = window.outerWidth - window.innerWidth > 160;
+        const heightThreshold = window.outerHeight - window.innerHeight > 160;
+        
+        // Additional mobile safety check to prevent any false positives
+        // If the screen is small, it's likely mobile, so we skip detection
+        if (window.innerWidth <= 1024) {
+          return;
+        }
+        
+        if (widthThreshold || heightThreshold) {
+          // DevTools may be open
+          console.clear();
+          document.documentElement.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; color: #fff; text-align: center;">
+              <div>
+                <h1 style="font-size: 24px;">Security Alert</h1>
+                <p style="margin-top: 20px;">Developer tools detected. Please close developer tools to continue using the application.</p>
+                <button onclick="window.location.reload()" style="margin-top: 20px; padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+                  Reload Application
+                </button>
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        }
+      } catch (error) {
+        // If anything fails, don't break the app
+        console.warn('DevTools detection error:', error);
       }
     };
     
-    // Check periodically
-    setInterval(detectDevTools, 1000);
+    // Only run DevTools detection on desktop browsers, and with less frequency
+    if (!isMobileDevice) {
+      setInterval(detectDevTools, 3000);
+    }
     
     // Apply CSS security protections
     const styleEl = document.createElement('style');

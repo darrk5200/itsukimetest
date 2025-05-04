@@ -8,6 +8,7 @@ export interface Anime {
   genres: string[];
   description: string;
   episodes: Episode[];
+  artworks?: string[]; // Array of artwork image URLs
   lastEpisodeTimestamp?: string; // ISO date string for most recent episode
   viewCount?: number; // Total all-time view count
   weeklyViews?: number; // Views for the current week

@@ -77,17 +77,18 @@ const NotFound = createLazyComponent(
 );
 
 function Router() {
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isTablet = useMediaQuery("(min-width: 769px) and (max-width: 1024px)");
   
   // Desktop view with fixed sidebar
-  if (!isMobile) {
+  if (!isMobile && !isTablet) {
     return (
       <div className="flex min-h-screen">
         {/* Fixed sidebar */}
         <Sidebar />
         
         {/* Main content with margin to prevent overlap with sidebar */}
-        <main className="flex-1 ml-64">
+        <main className="flex-1 ml-64 pt-14">
           <Header />
           
           <Suspense fallback={<LoadingSkeleton />}>
@@ -114,12 +115,47 @@ function Router() {
     );
   }
   
-  // Mobile view remains the same
+  // Tablet view with compact sidebar
+  if (isTablet) {
+    return (
+      <div className="flex min-h-screen">
+        {/* Compact sidebar */}
+        <Sidebar />
+        
+        {/* Main content with reduced margin for compact sidebar */}
+        <main className="flex-1 ml-16 pt-14">
+          <Header />
+          
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Switch>
+              <Route path="/" component={HomePage} />
+              <Route path="/anime/:id" component={AnimePage} />
+              <Route path="/anime/:id/episode/:episodeId" component={AnimePage} />
+              <Route path="/history" component={HistoryPage} />
+              <Route path="/search" component={SearchPage} />
+              <Route path="/trending" component={TrendingPage} />
+              <Route path="/recommended" component={RecommendedPage} />
+              <Route path="/recent" component={RecentPage} />
+              <Route path="/subscriptions" component={HomePage} />
+              <Route path="/watchlater" component={WatchLaterPage} />
+              <Route path="/favorites" component={HistoryPage} />
+              <Route path="/profile" component={ProfilePage} />
+              <Route path="/comments" component={CommentsPage} />
+              {/* Fallback to 404 */}
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </main>
+      </div>
+    );
+  }
+  
+  // Mobile view with updated padding and structure
   return (
     <div className="flex flex-col min-h-screen">
       <Sidebar />
       
-      <main className="flex-1">
+      <main className="flex-1 pt-14 px-2">
         <Header />
         
         <Suspense fallback={<LoadingSkeleton />}>
@@ -143,7 +179,7 @@ function Router() {
         </Suspense>
         
         {/* Add padding at the bottom on mobile for the nav bar */}
-        <div className="h-16"></div>
+        <div className="h-20"></div>
       </main>
     </div>
   );

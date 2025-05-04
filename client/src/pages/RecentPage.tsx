@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AnimeListGrid } from '@/components/AnimeCard';
+import { TrendingSection } from '@/components/TrendingSection';
 import { Anime } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { getAnimesByLatestEpisode, isWithinDaysInGMT6 } from '@/lib/utils';
@@ -88,7 +88,7 @@ export default function RecentPage() {
             </div>
           </div>
           
-          <AnimeListGrid animes={recentAnimes} isNewTag />
+          <TrendingSection animes={recentAnimes} />
         </>
       ) : (
         <div className="text-center py-8">

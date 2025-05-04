@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AnimeListGrid } from '@/components/AnimeCard';
+import { TrendingSection } from '@/components/TrendingSection';
 import { Anime, WatchHistoryItem } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomItemsFromArray } from '@/lib/utils';
@@ -58,7 +58,7 @@ export default function RecommendedPage() {
       <h1 className="text-2xl font-bold mb-6">Recommended For You</h1>
       
       {recommendedAnimes.length > 0 ? (
-        <AnimeListGrid animes={recommendedAnimes} />
+        <TrendingSection animes={recommendedAnimes} />
       ) : (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No recommendations found</p>

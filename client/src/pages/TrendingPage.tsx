@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AnimeListGrid } from '@/components/AnimeCard';
+import { TrendingSection } from '@/components/TrendingSection';
 import { Anime } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 
@@ -33,7 +33,7 @@ export default function TrendingPage() {
       <h1 className="text-2xl font-bold mb-6">Popular Anime</h1>
       
       {trendingAnimes.length > 0 ? (
-        <AnimeListGrid animes={trendingAnimes} />
+        <TrendingSection animes={trendingAnimes} />
       ) : (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No popular anime found</p>

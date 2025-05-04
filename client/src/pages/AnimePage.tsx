@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
-import { Play, CheckCircle2, ChevronDown, Bell, BellRing, Eye, BookmarkPlus, Search, Settings } from 'lucide-react';
+import { Play, CheckCircle2, ChevronDown, ChevronUp, Bell, BellRing, Eye, BookmarkPlus, Search, Settings, Images, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { EpisodeList } from '@/components/EpisodeItem';
-import { AnimeListGrid } from '@/components/AnimeCard';
+import { AnimeCard } from '@/components/AnimeCard';
 import { CommentSection } from '@/components/CommentSection';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Anime, Episode, WatchHistoryItem } from '@/lib/types';
 import { 
@@ -74,6 +75,9 @@ export default function AnimePage({ params }: AnimePageProps) {
   
   // Description expand/collapse state
   const [description, setDescription] = useState({ expanded: false });
+  
+  // Artworks dialog state
+  const [artworksDialogOpen, setArtworksDialogOpen] = useState(false);
   
   // Handle episode change
   useEffect(() => {
@@ -154,6 +158,33 @@ export default function AnimePage({ params }: AnimePageProps) {
   
   return (
     <div>
+      {/* Artworks Dialog */}
+      <Dialog open={artworksDialogOpen} onOpenChange={setArtworksDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto" hideCloseButton>
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{anime.anime_name} Artworks</span>
+              <DialogClose className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted">
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </DialogTitle>
+            <DialogDescription>
+              Official artwork and illustrations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {anime.artworks?.map((artwork: string, index: number) => (
+              <div key={index} className="overflow-hidden rounded-lg">
+                <img 
+                  src={artwork} 
+                  alt={`${anime.anime_name} Artwork ${index + 1}`}
+                  className="w-full h-auto object-cover transition-transform hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Anime Banner and Info */}
       <div className="bg-card relative">
         <div className="relative" style={{ height: '500px' }}>
@@ -170,7 +201,7 @@ export default function AnimePage({ params }: AnimePageProps) {
           </div>
           
           <div className="absolute bottom-0 left-0 p-6 flex flex-col md:flex-row items-start md:items-end gap-6">
-            <div className="w-32 h-48 rounded-lg overflow-hidden shadow-lg">
+            <div className="hidden md:block w-32 h-48 rounded-lg overflow-hidden shadow-lg">
               <img 
                 src={anime.coverpage} 
                 alt={`${anime.anime_name} Cover`} 
@@ -179,26 +210,45 @@ export default function AnimePage({ params }: AnimePageProps) {
             </div>
             
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{anime.anime_name}</h1>
-              <div className="flex flex-wrap gap-2 mb-3">
+              <h1 className="text-3xl font-bold mb-2 text-white dark:text-white" style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>{anime.anime_name}</h1>
+              <div className="flex flex-wrap gap-1 mb-3 max-w-[90%] md:max-w-none overflow-x-hidden">
                 {anime.genres.map((genre, index) => (
-                  <span key={index} className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs">
+                  <span key={index} className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">
                     {genre}
                   </span>
                 ))}
               </div>
               <div className="flex flex-col mt-4 mb-4 max-w-3xl">
-                <p className="text-muted-foreground">
-                  {description.expanded 
-                    ? anime.description 
-                    : anime.description.slice(0, 100) + (anime.description.length > 100 ? '...' : '')}
-                </p>
+                <div className={description.expanded 
+                  ? "relative max-h-[200px] overflow-y-auto pr-1 side-panel bg-black/60 rounded-md p-3 pb-8" 
+                  : ""
+                }>
+                  <p className={description.expanded 
+                    ? "text-white font-medium" 
+                    : "text-white font-medium"
+                  } style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
+                    {description.expanded 
+                      ? anime.description 
+                      : anime.description.slice(0, 100) + (anime.description.length > 100 ? '...' : '')}
+                  </p>
+                  {/* Remove gradient indicator */}
+                </div>
                 {anime.description.length > 100 && (
                   <button 
                     onClick={() => setDescription(prev => ({ expanded: !prev.expanded }))} 
-                    className="text-primary text-sm mt-2 self-start font-medium hover:underline"
+                    className="text-primary text-xs sm:text-sm mt-2 self-start font-medium flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-colors"
                   >
-                    {description.expanded ? 'LESS' : 'MORE'}
+                    {description.expanded ? (
+                      <>
+                        <ChevronUp className="h-3 w-3" /> 
+                        LESS
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3" /> 
+                        MORE
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -216,10 +266,10 @@ export default function AnimePage({ params }: AnimePageProps) {
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4">
                 <Button 
                   variant="outline" 
-                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-6 py-2 rounded-full"
+                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-3 sm:px-6 py-1 sm:py-2 text-xs sm:text-sm rounded-full"
                   onClick={() => {
                     const added = toggleNotify(anime.id);
                     setIsNotified(added);
@@ -243,19 +293,19 @@ export default function AnimePage({ params }: AnimePageProps) {
                 >
                   {isNotified ? (
                     <>
-                      <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 text-primary" />
                       Notify On
                     </>
                   ) : (
                     <>
-                      <Bell className="h-5 w-5 mr-2" />
+                      <Bell className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                       Notify
                     </>
                   )}
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-6 py-2 rounded-full"
+                  className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-3 sm:px-6 py-1 sm:py-2 text-xs sm:text-sm rounded-full"
                   onClick={() => {
                     const added = toggleWatchLater(anime.id);
                     setInWatchLater(added);
@@ -270,16 +320,27 @@ export default function AnimePage({ params }: AnimePageProps) {
                 >
                   {inWatchLater ? (
                     <>
-                      <CheckCircle2 className="h-5 w-5 mr-2 text-primary" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 text-primary" />
                       Bookmarked
                     </>
                   ) : (
                     <>
-                      <BookmarkPlus className="h-5 w-5 mr-2" />
+                      <BookmarkPlus className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                       Bookmark
                     </>
                   )}
                 </Button>
+                
+                {anime.artworks && anime.artworks.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center bg-muted hover:bg-muted/90 text-foreground px-3 sm:px-6 py-1 sm:py-2 text-xs sm:text-sm rounded-full"
+                    onClick={() => setArtworksDialogOpen(true)}
+                  >
+                    <Images className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+                    Artworks ({anime.artworks.length})
+                  </Button>
+                )}
 
               </div>
             </div>
@@ -292,7 +353,7 @@ export default function AnimePage({ params }: AnimePageProps) {
         <div className="p-4 md:p-6">
           {/* Episode Title and Info - Visible above the video */}
           <div id="episodeTitleContainer" className="bg-card rounded-lg p-4 mb-6">
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-2xl font-bold text-white dark:text-white" style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
               Episode {currentEpisode.episode_number}: {currentEpisode.title}
             </h2>
           </div>
@@ -375,7 +436,7 @@ export default function AnimePage({ params }: AnimePageProps) {
           {/* Episodes List - Mobile Only */}
           <div className="md:hidden mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Episodes</h2>
+              <h2 className="text-xl font-bold text-white dark:text-white" style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>Episodes</h2>
               {anime.episodes.length > 12 && (
                 <div className="relative">
                   <Button variant="outline" className="bg-muted hover:bg-muted/90 text-foreground flex items-center">
@@ -407,7 +468,7 @@ export default function AnimePage({ params }: AnimePageProps) {
           
           {/* Recommendations */}
           <div>
-            <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
+            <h2 className="text-xl font-bold mb-4 text-white dark:text-white" style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>You May Also Like</h2>
             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
               {similarAnimes.map((similarAnime) => (
                 <Link 

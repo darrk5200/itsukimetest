@@ -51,6 +51,7 @@ function VideoPlayerComponent({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSeeking, setIsSeeking] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [viewTracked, setViewTracked] = useState(false);
@@ -377,6 +378,8 @@ function VideoPlayerComponent({
     
     const onSeeking = () => {
       console.log('Video seeking at time:', video.currentTime);
+      setIsSeeking(true);
+      setIsLoading(true);
     };
     
     const onSeeked = () => {
@@ -384,6 +387,9 @@ function VideoPlayerComponent({
       // Update UI after seeking finishes
       setCurrentTime(video.currentTime);
       setProgress((video.currentTime / duration) * 100);
+      // Reset seeking and loading states
+      setIsSeeking(false);
+      setIsLoading(false);
     };
     
     // Add these event listeners right away
@@ -631,6 +637,10 @@ function VideoPlayerComponent({
     // Prevent operations if video not ready
     if (!videoRef.current || duration <= 0) return;
     
+    // Set loading and seeking states immediately when user interacts with slider
+    setIsSeeking(true);
+    setIsLoading(true);
+    
     // Calculate the new time position in seconds
     const newTime = (newProgress / 100) * duration;
     console.log('Setting new time:', newTime, 
@@ -647,10 +657,6 @@ function VideoPlayerComponent({
       
       // Set the current time directly
       video.currentTime = newTime;
-      
-      // Set a flag to indicate we're seeking manually
-      // This can help prevent flickering or jumping
-      const isSeeking = true;
       
       // Double check that our seek worked correctly
       requestAnimationFrame(() => {
@@ -756,16 +762,37 @@ function VideoPlayerComponent({
       const videoContainer = containerRef.current;
       if (!videoContainer || !videoRef.current) return;
       
-      // Check if video container is in viewport
-      const rect = videoContainer.getBoundingClientRect();
-      const isInViewport = (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-      );
-      
-      if (!isInViewport) return;
+      // Check if video container is at least partially in viewport
+      // This is a more lenient check that works better on mobile devices
+      try {
+        const rect = videoContainer.getBoundingClientRect();
+        const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+        const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+        
+        // Consider element in viewport if it's at least partially visible
+        // (More forgiving than requiring it to be fully in viewport)
+        const isPartiallyInViewport = !(
+          rect.bottom < 0 ||
+          rect.top > windowHeight ||
+          rect.right < 0 ||
+          rect.left > windowWidth
+        );
+        
+        // Skip keyboard shortcuts if video isn't even partially visible
+        if (!isPartiallyInViewport) return;
+        
+        // Also check if we're on a mobile device - keyboard events work differently
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Some mobile browsers have inconsistent keyboard event behavior
+        if (isMobileDevice) {
+          // Be more lenient about keyboard shortcuts on mobile
+          // Allow them to work even if exact viewport conditions aren't met
+        }
+      } catch (err) {
+        // If there's any error in the viewport calculation, proceed anyway
+        console.warn('Error checking viewport:', err);
+      }
       
       // Only if the target is not an input element
       if (e.target instanceof HTMLInputElement ||
@@ -956,16 +983,7 @@ function VideoPlayerComponent({
           
           {/* Big center play button removed */}
           
-          {/* Video title overlay - showing only episode number and title */}
-          {!hasError && title && (
-            <div className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent px-4 py-3 transition-opacity duration-300 ${
-              showControls ? 'opacity-100' : 'opacity-0'
-            }`}>
-              <h2 className="text-white font-medium truncate">
-                {title.includes('Episode') ? title.split(':')[0] + ': ' + title.split(':')[1] : title}
-              </h2>
-            </div>
-          )}
+          {/* Video title overlay removed as requested */}
           
           {/* Video controls */}
           {!hasError && (
