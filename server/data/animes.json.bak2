@@ -6,12 +6,7 @@
     "episode_count": 12,
     "releasedEpisodes": 7,
     "releaseDate": "2016-01-08",
-    "genres": [
-      "Mystery",
-      "Thriller",
-      "Supernatural",
-      "Drama"
-    ],
+    "genres": ["Mystery", "Thriller", "Supernatural", "Drama"],
     "description": "Satoru Fujinuma is a struggling manga artist who has the ability to turn back time and prevent deaths. When his mother is killed, he accidentally time-leaps back to his childhood, where he tries to prevent the abduction and killing of his classmate.",
     "lastEpisodeTimestamp": "2025-04-26T09:42:00",
     "artworks": [
@@ -45,9 +40,7 @@
     "episode_count": 8,
     "releasedEpisodes": 8,
     "releaseDate": "2020-07-01",
-    "genres": [
-      "Slice of Life"
-    ],
+    "genres": ["Slice of Life"],
     "description": "This is a young romantic comedy that won't let you say, \"it's over!\"",
     "lastEpisodeTimestamp": "2024-04-26T13:25:00+06:00",
     "artworks": [
@@ -130,14 +123,7 @@
     "episode_count": 12,
     "releasedEpisodes": 4,
     "releaseDate": "2025-04-02",
-    "genres": [
-      "Comedy",
-      "Ecchi",
-      "Romance",
-      "Slice of Life",
-      "School",
-      "Supernatural"
-    ],
+    "genres": ["Comedy","Ecchi", "Romance", "Slice of Life", "School", "Supernatural"],
     "description": "Takane Takamine is the goddess of her high school. With perfect grades, athletic prowess, and unrivaled beauty, this student council president is the apple of everyone's eye-including Koushi Shirota, a below-average student with no friends or social prospects whatsoever. But he'll soon find out the secret behind Takamine's unbelievable success-her underwear! When she strips, she can undo any of her past actions, and now that Koushi knows, Takamine won't let him off so easy...",
     "lastEpisodeTimestamp": "2025-05-03T20:30:00",
     "artworks": [
@@ -151,7 +137,7 @@
         "id": 1,
         "episode_number": 1,
         "title": "Become my closet",
-        "video_url": "https://filemoon.sx/e/gw9v8m4k0z4w",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_01.mp4",
         "thumbnail": "https://github.com/itsukihme/A7f3K9t2Wq8L1xZ0/raw/refs/heads/main/thumbnail.webp",
         "duration": 1370
       },
@@ -196,14 +182,7 @@
     "episode_count": 12,
     "releasedEpisodes": 4,
     "releaseDate": "2025-04-02",
-    "genres": [
-      "Comedy",
-      "Fantasy",
-      "Supernatural",
-      "Shounen",
-      "Romance",
-      "Slice of Life"
-    ],
+    "genres": ["Comedy", "Fantasy", "Supernatural", "Shounen", "Romance", "Slice of Life"],
     "description": "Nico Wakatsuki has finished her six years of witch training and is moving back to town by herself. As a new witch, she must choose a familiar to accompany her. However, unlike the other witches, she wishes to pick a non-animal familiar. There's no better companion than Morihito 'Moi' Otogi—her childhood friend who happens to be an ogre. Morihito is vehemently opposed to being her servant, but he reluctantly accepts his fate after learning that a curse would revert him into a strange cow-tiger hybrid were he to disobey a witch's order. Due to Morihito's father leaving for a business trip and Nico's mother remaining behind in the Witches' Holy Land, the two teens find themselves living together under the same roof. While Nico is ecstatic to be living with her crush, Morihito finds that her magical antics and overall clumsiness create more problems than solutions. With a prophesied disaster to befall Nico within the year, Morihito must do everything he can to protect her as her bodyguard while also upholding his duties as her familiar.",
     "lastEpisodeTimestamp": "2025-05-04T14:30:00",
     "artworks": [
@@ -216,7 +195,7 @@
         "id": 1,
         "episode_number": 1,
         "title": "Witch's Return",
-        "video_url": "https://filemoon.to/e/9toz2lev4bu3/WITCHWATCH01.mp4",
+        "video_url": "https://filemoon.to/d/9toz2lev4bu3/WITCHWATCH01.mp4",
         "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/fRvOA3U5CJnhaUv8Eo6xmIzAOVc.jpg",
         "duration": 1452
       },
@@ -224,7 +203,7 @@
         "id": 2,
         "episode_number": 2,
         "title": "A Giant Rookie / Let's Go to a Diner! / The Flying Classroom",
-        "video_url": "https://filemoon.to/e/9toz2lev4bu3/WITCHWATCH01.mp4",
+        "video_url": "https://filemoon.to/d/9toz2lev4bu3/WITCHWATCH01.mp4",
         "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/kuwEX3F9iFoVEqSAr9Pifad5Zdl.jpg",
         "duration": 1452
       }

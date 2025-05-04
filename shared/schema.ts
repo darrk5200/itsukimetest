@@ -14,6 +14,7 @@ export const animes = sqliteTable("animes", {
   description: text("description").notNull(),
   lastEpisodeTimestamp: text("last_episode_timestamp"),
   episodes: text("episodes", { mode: "json" }).notNull(),
+  artworks: text("artworks", { mode: "json" }),
   viewCount: integer("view_count").notNull().default(0), // Total all-time view count
 });
 
@@ -68,6 +69,7 @@ export const animeSchema = z.object({
   description: z.string(),
   lastEpisodeTimestamp: z.string().optional(),
   episodes: z.array(episodeSchema),
+  artworks: z.array(z.string()).optional(),
   viewCount: z.number().int().nonnegative().default(0),
   weeklyViews: z.number().int().nonnegative().optional(),
 });
