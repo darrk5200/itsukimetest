@@ -121,11 +121,11 @@
     "anime_name": "Please Put Them On, Takamine-san",
     "coverpage": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx179965-EwqzG3xSyxwc.jpg",
     "episode_count": 12,
-    "releasedEpisodes": 4,
+    "releasedEpisodes": 5,
     "releaseDate": "2025-04-02",
     "genres": ["Comedy","Ecchi", "Romance", "Slice of Life", "School", "Supernatural", "Time Travel"],
     "description": "Takane Takamine is the goddess of her high school. With perfect grades, athletic prowess, and unrivaled beauty, this student council president is the apple of everyone's eye-including Koushi Shirota, a below-average student with no friends or social prospects whatsoever. But he'll soon find out the secret behind Takamine's unbelievable success-her underwear! When she strips, she can undo any of her past actions, and now that Koushi knows, Takamine won't let him off so easy...",
-    "lastEpisodeTimestamp": "2025-05-03T20:30:00",
+    "lastEpisodeTimestamp": "2025-05-10T20:30:00",
     "artworks": [
       "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx179965-EwqzG3xSyxwc.jpg",
       "https://comicvine.gamespot.com/a/uploads/scale_large/11143/111435323/8012017-haite-kudasai-takamine-san.jpg",
@@ -184,6 +184,14 @@
         "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_05.mp4",
         "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/vT1Hu3N17TjPWOFndJaylmZ8N4A.jpg",
         "duration": 1439
+      },
+      {
+        "id": 6,
+        "episode_number": 6,
+        "title": "Honey, let me wash your back",
+        "video_url": "https://raw.githubusercontent.com/itsukihme/A7f3K9t2Wq8L1xZ0/refs/heads/main/A7f3K9t2Wq8L1xZ0_06.mp4",
+        "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/b3urPGhvVi2dW3tbAPQ0kFMBAe0.jpg",
+        "duration": 1420
       }
     ]
   },
@@ -246,6 +254,49 @@
         "video_url": "https://github.com/itsukihme/A9X3T7B1L2Q8M5ZC/raw/refs/heads/main/A9X3T7B1L2Q8M5ZC_01.mp4",
         "thumbnail": "https://raw.githubusercontent.com/itsukihme/A9X3T7B1L2Q8M5ZC/refs/heads/main/thumbnail_01.png",
         "duration": 1403
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "anime_name": "Bleach",
+    "coverpage": "https://cdn.myanimelist.net/images/anime/3/40451.jpg",
+    "episode_count": 366,
+    "releasedEpisodes": 3,
+    "releaseDate": "2004-10-05",
+    "genres": ["Action", "Adventure", "Fantasy", "Shounen", "Supernatural"],
+    "description": "Ichigo Kurosaki is an ordinary high schooler—until his family is attacked by a Hollow, a corrupt spirit that seeks to devour human souls. It is then that he meets a Soul Reaper named Rukia Kuchiki, who gets injured while protecting Ichigo's family. To save his family, Ichigo accepts Rukia's offer of taking her powers and becomes a Soul Reaper as a result. However, as Rukia is unable to regain her powers, Ichigo is given the daunting task of hunting down the Hollows that plague their town. However, he is not alone in his fight, as he is later joined by his friends—classmates Orihime Inoue, Yasutora Sado, and Uryuu Ishida—who each have their own unique abilities. As Ichigo and his comrades get used to their new duties and support each other on and off the battlefield, the young Soul Reaper soon learns that the Hollows are not the only real threat to the human world.",
+    "lastEpisodeTimestamp": "2025-05-05T10:00:00",
+    "artworks": [
+      "https://cdn.myanimelist.net/images/anime/3/40451.jpg",
+      "https://cdn.myanimelist.net/images/anime/11/80614.jpg",
+      "https://cdn.myanimelist.net/images/anime/5/59531.jpg",
+      "https://cdn.myanimelist.net/images/anime/1908/135431.jpg"
+    ],
+    "episodes": [
+      {
+        "id": 1,
+        "episode_number": 1,
+        "title": "The Day I Became a Shinigami",
+        "video_url": "https://github.com/itsukihme/rY7NqLp3WzXJ8uDs/raw/refs/heads/main/rY7NqLp3WzXJ8uDs_01.mp4",
+        "thumbnail": "https://raw.githubusercontent.com/itsukihme/rY7NqLp3WzXJ8uDs/refs/heads/main/b1.png",
+        "duration": 1440
+      },
+      {
+        "id": 2,
+        "episode_number": 2,
+        "title": "A Shinigami's Work",
+        "video_url": "https://github.com/itsukihme/rY7NqLp3WzXJ8uDs/raw/refs/heads/main/rY7NqLp3WzXJ8uDs_02.mp4",
+        "thumbnail": "https://raw.githubusercontent.com/itsukihme/rY7NqLp3WzXJ8uDs/refs/heads/main/b2.png",
+        "duration": 1440
+      },
+      {
+        "id": 3,
+        "episode_number": 3,
+        "title": "The Older Brother's Wish, the Younger Sister's Wish",
+        "video_url": "https://github.com/itsukihme/rY7NqLp3WzXJ8uDs/raw/refs/heads/main/rY7NqLp3WzXJ8uDs_03.mp4",
+        "thumbnail": "https://raw.githubusercontent.com/itsukihme/rY7NqLp3WzXJ8uDs/refs/heads/main/b3.png",
+        "duration": 1440
       }
     ]
   }
