@@ -32,10 +32,13 @@ export function PopularScoreboard({ animes, title = "Popular This Week", classNa
             key={anime.id} 
             href={`/anime/${anime.id}`}
           >
-            <div className={cn(
-              "flex items-center gap-3 p-3 transition-colors hover:bg-card cursor-pointer",
-              index !== sortedAnimes.length - 1 ? "border-b border-border/30" : ""
-            )}>
+            <div 
+              className={cn(
+                "flex items-center gap-3 p-3 transition-colors hover:bg-card cursor-pointer",
+                index !== sortedAnimes.length - 1 ? "border-b border-border/30" : ""
+              )}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
               {/* Rank Number with Medal for top 3 */}
               <div className="flex-shrink-0 w-10 flex justify-center">
                 {index === 0 ? (

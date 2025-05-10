@@ -29,7 +29,7 @@ function EpisodeItemComponent({ episode, animeId, isActive = false, className }:
     <div 
       className={cn(
         "episode-item border border-muted rounded-lg overflow-hidden transition-colors hover:border-primary cursor-pointer",
-        isActive && "active",
+        isActive && "border-blue-500 border-l-2 bg-blue-100/20",
         className
       )}
       onClick={handleClick}
@@ -200,7 +200,7 @@ export function EpisodeList({
                 key={episode.id}
                 className={cn(
                   "episode-item border border-muted rounded-lg overflow-hidden transition-colors hover:border-primary cursor-pointer",
-                  episode.id === activeEpisodeId && "active"
+                  episode.id === activeEpisodeId && "border-blue-500 border-l-2 bg-blue-100/20"
                 )}
                 onClick={() => {
                   navigate(`/anime/${animeId}/episode/${episode.id}`);

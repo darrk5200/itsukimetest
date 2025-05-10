@@ -363,6 +363,8 @@ export default function AnimePage({ params }: AnimePageProps) {
             {/* Video Player (full width on mobile, 2/3 on desktop) */}
             <div className="w-full md:w-[calc(80%-60px)] md:h-full">
               <VideoPlayer
+                // Add a key prop with the episode ID to force the component to remount when the episode changes
+                key={`video-player-${currentEpisode.id}`}
                 src={currentEpisode.video_url}
                 poster={currentEpisode.thumbnail}
                 title={`${anime.anime_name} - Episode ${currentEpisode.episode_number}: ${currentEpisode.title}`}
@@ -405,7 +407,7 @@ export default function AnimePage({ params }: AnimePageProps) {
                   }}>
                     <div className={cn(
                       "flex gap-3 p-2 hover:bg-muted/50 transition-colors h-[85px] mb-2 border-b border-border/50 rounded",
-                      episode.id === currentEpisode.id && "bg-muted border-primary/30"
+                      episode.id === currentEpisode.id && "bg-blue-100/20 border-blue-500 border-l-2"
                     )}>
                       <div className="relative w-[120px] h-[70px] flex-shrink-0">
                         <img 
@@ -480,9 +482,8 @@ export default function AnimePage({ params }: AnimePageProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       navigate(`/anime/${similarAnime.id}`);
-                      setTimeout(() => {
-                        document.getElementById('episodeTitleContainer')?.scrollIntoView({ behavior: 'smooth' });
-                      }, 100);
+                      // Scroll to top of the page
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                   >
                     <div className="relative">

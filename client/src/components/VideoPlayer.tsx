@@ -155,6 +155,14 @@ function VideoPlayerComponent({
     const video = videoRef.current;
     if (!video) return;
     
+    // If the duration isn't available yet, make sure the progress shows 0
+    if (!video.duration || video.duration <= 0) {
+      setCurrentTime(0);
+      setProgress(0);
+      return;
+    }
+    
+    // Update time and progress in the UI
     setCurrentTime(video.currentTime);
     const newProgress = (video.currentTime / video.duration) * 100;
     setProgress(newProgress);
@@ -292,6 +300,11 @@ function VideoPlayerComponent({
   useEffect(() => {
     // Fetch the video token when source changes
     fetchVideoToken();
+    
+    // Reset progress and current time in UI immediately when src/episode changes
+    // This ensures the progress bar is reset right away
+    setProgress(0);
+    setCurrentTime(0);
   }, [src, animeId, episodeId, fetchVideoToken]);
 
   // Memoize the controls timer function to prevent recreation on each render
@@ -345,6 +358,8 @@ function VideoPlayerComponent({
       // Reset the progress if it's a new source
       setProgress(0);
       setCurrentTime(0);
+      // Force the time to be at the beginning for new episodes
+      video.currentTime = 0;
     } else {
       // Keep the current time position if just reloading the same video
       setProgress((currentTimePosition / duration) * 100);
@@ -359,8 +374,9 @@ function VideoPlayerComponent({
     const onCanPlay = () => {
       console.log('Video can play now');
       setIsLoading(false);
-      // If we were playing before reload, resume
-      if (wasPlaying && video && video.paused) {
+      // If we were playing before reload and it's the same video, resume
+      // For new episodes (when src changes), we don't restore the time position
+      if (wasPlaying && video && video.paused && securedVideoUrl === video.src) {
         video.currentTime = currentTimePosition;
         video.play().catch(e => console.warn('Could not auto-resume video', e));
       }
@@ -369,8 +385,11 @@ function VideoPlayerComponent({
     const onLoadedData = () => {
       console.log('Video data loaded');
       setIsLoading(false);
-      // Ensure we maintain the time position on reload
-      if (currentTimePosition > 0 && Math.abs(video.currentTime - currentTimePosition) > 0.5) {
+      
+      // Only restore time position if it's the same video source
+      // For new episodes, we start from the beginning
+      if (securedVideoUrl === video.src && currentTimePosition > 0 && 
+          Math.abs(video.currentTime - currentTimePosition) > 0.5) {
         console.log('Restoring time position:', currentTimePosition);
         video.currentTime = currentTimePosition;
       }
@@ -400,8 +419,20 @@ function VideoPlayerComponent({
     
     // Set the source and load the video
     if (video.src !== securedVideoUrl) {
+      // Force UI reset before loading new video
+      setProgress(0);
+      setCurrentTime(0);
+      
+      // Set new source and load video
       video.src = securedVideoUrl;
+      video.currentTime = 0; // Force time reset
       video.load();
+      
+      // Update progress bar immediately after loading
+      requestAnimationFrame(() => {
+        setProgress(0);
+        setCurrentTime(0);
+      });
     }
     
     // Reset the initializing flag
