@@ -3,9 +3,10 @@ import { twMerge } from "tailwind-merge";
 import { 
   getNotifyTimestampForAnime, 
   addNotification, 
-  getNotifyTimestamps 
+  getNotifyTimestamps,
+  getNotifications
 } from "@/lib/storage";
-import { Anime } from "@/lib/types";
+import { Anime, Notification } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -82,44 +83,54 @@ export function getFilenameFromPath(path: string): string {
 }
 
 /**
- * Checks if a timestamp is within the last n days, considering the GMT+6 timezone
+ * Checks if a timestamp is within a certain number of days from the current date,
+ * with proper handling of GMT+6 time zone.
  * 
- * @param timestamp ISO date string with timezone information
- * @param days Number of days to check
- * @returns boolean indicating if the timestamp is within the specified days
+ * @param timestamp The timestamp to check (can include timezone info like +06:00 or Z)
+ * @param days Number of days to check against (default: 3)
+ * @returns boolean indicating if the timestamp is within the specified number of days
  */
-export function isWithinDaysInGMT6(timestamp: string | undefined, days: number = 3): boolean {
+export
+function isWithinDaysInGMT6(timestamp: string | undefined, days: number = 3): boolean {
   if (!timestamp) return false;
   
-  // Parse the timestamp into a Date object
-  const releaseDate = new Date(timestamp);
-  
-  // Get current date in user's local timezone
-  const now = new Date();
-  
-  // Convert user's now to GMT+6
-  // First, get the current user timezone offset in minutes
-  const userOffsetMinutes = now.getTimezoneOffset();
-  
-  // GMT+6 offset is -360 minutes (negative because getTimezoneOffset returns the opposite)
-  const gmt6OffsetMinutes = -360;
-  
-  // Calculate the difference between user timezone and GMT+6 in milliseconds
-  const offsetDiffMs = (userOffsetMinutes - gmt6OffsetMinutes) * 60 * 1000;
-  
-  // Create a new date that represents current time in GMT+6
-  const nowInGMT6 = new Date(now.getTime() + offsetDiffMs);
-  
-  // Calculate the difference in days
-  const diffTimeMs = Math.abs(nowInGMT6.getTime() - releaseDate.getTime());
-  const diffDays = Math.floor(diffTimeMs / (1000 * 60 * 60 * 24));
-  
-  // For a notification to appear, the episode release date should be MORE RECENT 
-  // than the converted current time minus the days threshold
-  const thresholdDate = new Date(nowInGMT6);
-  thresholdDate.setDate(thresholdDate.getDate() - days);
-  
-  return releaseDate >= thresholdDate;
+  try {
+    // Parse the timestamp into a Date object 
+    // JavaScript's Date constructor automatically handles timezone information
+    // like +06:00 or Z suffix
+    const releaseDate = new Date(timestamp);
+    
+    // Get current date
+    const nowUTC = new Date();
+    
+    // If the timestamp doesn't include timezone info, assume it's in GMT+6 and convert to UTC
+    // Note: With our updates, all timestamps should now have +06:00, but this is kept for backward compatibility
+    if (!timestamp.includes('Z') && !timestamp.includes('+') && !timestamp.includes('-')) {
+      // Convert from GMT+6 to UTC by subtracting 6 hours
+      releaseDate.setHours(releaseDate.getHours() - 6);
+      console.log('Converted timestamp to UTC:', timestamp, '→', releaseDate.toISOString());
+    }
+    
+    // Calculate the threshold date (current time minus the days)
+    const thresholdDate = new Date(nowUTC);
+    thresholdDate.setDate(thresholdDate.getDate() - days);
+    
+    // Debug logging
+    console.log('Timestamp comparison:', { 
+      original: timestamp,
+      release: releaseDate.toISOString(),
+      now: nowUTC.toISOString(),
+      threshold: thresholdDate.toISOString(),
+      isWithinDays: releaseDate >= thresholdDate
+    });
+    
+    // For a notification to appear, the episode release date should be MORE RECENT 
+    // than the current time minus the days threshold
+    return releaseDate >= thresholdDate;
+  } catch (error) {
+    console.error('Error checking if timestamp is within days:', error);
+    return false;
+  }
 }
 
 /**
@@ -159,18 +170,67 @@ export function hasWatchedLatestEpisode(animeId: number, latestEpisodeId: number
  */
 export function wasReleasedAfterNotificationEnabled(animeId: number, episodeReleaseTimestamp?: string): boolean {
   try {
-    if (!episodeReleaseTimestamp) return false;
+    if (!episodeReleaseTimestamp) {
+      console.log('NOTIFY DEBUG: wasReleasedAfterNotificationEnabled - No episode release timestamp provided');
+      return false;
+    }
     
     // Get the timestamp when notifications were enabled for this anime
     const notifyTimestamp = getNotifyTimestampForAnime(animeId);
-    if (!notifyTimestamp) return false;
+    if (!notifyTimestamp) {
+      console.log(`NOTIFY DEBUG: wasReleasedAfterNotificationEnabled - No notification enabled timestamp for anime ID ${animeId}`);
+      return false;
+    }
     
-    // Compare the episode release timestamp with the notification enabled timestamp
+    // Parse the release timestamp - this will automatically handle timezone information
+    // such as +06:00 or Z suffix correctly
     const releaseDate = new Date(episodeReleaseTimestamp);
+    
+    // If the timestamp doesn't include timezone info, assume it's in GMT+6 and convert to UTC
+    // Note: With our updates, all timestamps should now have +06:00, but this is kept for backward compatibility
+    if (!episodeReleaseTimestamp.includes('Z') && !episodeReleaseTimestamp.includes('+') && !episodeReleaseTimestamp.includes('-')) {
+      // Convert from GMT+6 to UTC by subtracting 6 hours
+      releaseDate.setHours(releaseDate.getHours() - 6);
+      console.log('NOTIFY DEBUG: Converted episode release timestamp to UTC:', episodeReleaseTimestamp, '→', releaseDate.toISOString());
+    }
+    
+    // Parse the notification enabled timestamp (this is already in user's local timezone)
     const notifyDate = new Date(notifyTimestamp);
     
+    // Important: If we're checking future timestamps (15:22 compared to current time 09:21), 
+    // we need to handle this specially.
+    // We'll assume any timestamp today is valid for notification purposes even if technically in future
+    const isFutureTimestampToday = () => {
+      const currentDate = new Date();
+      const releaseDay = releaseDate.getDate();
+      const releaseMonth = releaseDate.getMonth();
+      const releaseYear = releaseDate.getFullYear();
+      const today = new Date();
+      
+      // Check if it's today's date
+      const isToday = releaseDay === today.getDate() && 
+                      releaseMonth === today.getMonth() && 
+                      releaseYear === today.getFullYear();
+                      
+      return isToday && releaseDate > currentDate;
+    };
+    
+    // For future timestamps on current day, consider it valid
+    const specialCaseToday = isFutureTimestampToday();
+    
+    // Debug logging
+    console.log('NOTIFY DEBUG: Release vs Notification timestamp comparison:', { 
+      releaseTimestamp: episodeReleaseTimestamp,
+      releaseDate: releaseDate.toISOString(),
+      notifyTimestamp: notifyTimestamp,
+      notifyDate: notifyDate.toISOString(),
+      specialCaseFutureToday: specialCaseToday,
+      isReleasedAfter: specialCaseToday || releaseDate > notifyDate
+    });
+    
     // Episode should be released AFTER notifications were enabled
-    return releaseDate > notifyDate;
+    // Special handling for today's future timestamped episodes
+    return specialCaseToday || releaseDate > notifyDate;
   } catch (error) {
     console.error('Error checking if episode was released after notification enabled:', error);
     return false;
@@ -187,7 +247,14 @@ export function checkForNewEpisodeNotifications(animes: Anime[]): void {
   try {
     // Get list of animes the user wants notifications for
     const notifyList = getNotifyTimestamps();
-    if (!notifyList || notifyList.length === 0) return;
+    
+    // Debug output for notification list
+    console.log('NOTIFY DEBUG: Notification timestamps in local storage:', notifyList);
+    
+    if (!notifyList || notifyList.length === 0) {
+      console.log('NOTIFY DEBUG: No anime in notification list. To receive notifications, click the bell icon on an anime card.');
+      return;
+    }
     
     // For each anime with notifications enabled
     for (const animeTimestamp of notifyList) {
@@ -196,22 +263,62 @@ export function checkForNewEpisodeNotifications(animes: Anime[]): void {
       
       // Find the anime in the list
       const anime = animes.find(a => a.id === animeId);
-      if (!anime || !anime.lastEpisodeTimestamp) continue;
       
-      // Check if the latest episode was released after notifications were enabled
+      if (!anime) {
+        console.log(`NOTIFY DEBUG: Anime ID ${animeId} not found in anime list`);
+        continue;
+      }
+      
+      if (!anime.lastEpisodeTimestamp) {
+        console.log(`NOTIFY DEBUG: Anime "${anime.anime_name}" has no lastEpisodeTimestamp`);
+        continue;
+      }
+      
+      // Get the latest episode timestamp
       const latestEpisodeTimestamp = anime.lastEpisodeTimestamp;
-      const releaseDate = new Date(latestEpisodeTimestamp);
-      const notifyDate = new Date(notificationEnabledTime);
       
-      // Only proceed if the episode was released after notifications were enabled
-      if (releaseDate > notifyDate) {
+      // Log information about this anime's notification check
+      console.log(`NOTIFY DEBUG: Checking notifications for anime: ${anime.anime_name} (ID: ${animeId})`, {
+        lastEpisodeTimestamp: latestEpisodeTimestamp,
+        notificationEnabledAt: notificationEnabledTime
+      });
+      
+      // Use our improved wasReleasedAfterNotificationEnabled function to check
+      // if the latest episode was released after the user enabled notifications
+      const isReleasedAfterEnabled = wasReleasedAfterNotificationEnabled(animeId, latestEpisodeTimestamp);
+      
+      if (isReleasedAfterEnabled) {
+        console.log(`NOTIFY DEBUG: Episode released after notification was enabled for ${anime.anime_name}`);
+        
         // Check if the episode was released recently (within last 3 days)
-        if (isWithinDaysInGMT6(latestEpisodeTimestamp, 3)) {
+        // This uses our improved isWithinDaysInGMT6 function
+        const isWithinDays = isWithinDaysInGMT6(latestEpisodeTimestamp, 3);
+        
+        if (isWithinDays) {
+          console.log(`NOTIFY DEBUG: Episode is recent (within 3 days) for ${anime.anime_name}`);
+          
           // Get the latest episode
-          const latestEpisodeId = anime.episodes[anime.releasedEpisodes - 1]?.id;
+          let latestEpisodeId: number | undefined;
+          
+          // Check if episodes array exists and has episodes
+          if (anime.episodes && anime.episodes.length > 0 && anime.releasedEpisodes > 0) {
+            // Get the latest released episode
+            const latestEpisodeIndex = Math.min(anime.releasedEpisodes - 1, anime.episodes.length - 1);
+            latestEpisodeId = anime.episodes[latestEpisodeIndex]?.id;
+          }
+          
+          if (!latestEpisodeId) {
+            console.log(`NOTIFY DEBUG: Could not find latest episode ID for ${anime.anime_name}. Released episodes: ${anime.releasedEpisodes}, Episodes array length: ${anime.episodes?.length || 0}`);
+            continue;
+          }
+          
+          // Check if we've already watched this episode
+          const alreadyWatched = hasWatchedLatestEpisode(animeId, latestEpisodeId);
           
           // Only notify if user hasn't watched it yet
-          if (latestEpisodeId && !hasWatchedLatestEpisode(animeId, latestEpisodeId)) {
+          if (!alreadyWatched) {
+            console.log(`NOTIFY DEBUG: Creating notification for unwatched episode of ${anime.anime_name}`);
+            
             // Add notification
             addNotification({
               animeId: anime.id,
@@ -219,8 +326,22 @@ export function checkForNewEpisodeNotifications(animes: Anime[]): void {
               message: `New episode ${anime.releasedEpisodes} is available to watch!`,
               episodeId: latestEpisodeId
             });
+            
+            // Check if notification was added successfully
+            const notifications = getNotifications();
+            const added = notifications.some(n => 
+              n.animeId === anime.id && n.episodeId !== undefined && n.episodeId === latestEpisodeId
+            );
+            console.log(`NOTIFY DEBUG: Notification ${added ? 'was added successfully' : 'FAILED to add'}`);
+            
+          } else {
+            console.log(`NOTIFY DEBUG: User has already watched episode ${anime.releasedEpisodes} of ${anime.anime_name}`);
           }
+        } else {
+          console.log(`NOTIFY DEBUG: Episode is not recent for ${anime.anime_name}`);
         }
+      } else {
+        console.log(`NOTIFY DEBUG: Episode released before notification was enabled for ${anime.anime_name}`);
       }
     }
   } catch (error) {

@@ -350,8 +350,11 @@ function VideoPlayerComponent({
     setErrorMessage("");
     setIsLoading(true);
     
-    // Reset view tracking only for new episodes
-    if (securedVideoUrl !== video.src) {
+    // Check if video source is already correct to avoid unnecessary reloads
+    const isSameSource = securedVideoUrl === video.src;
+    
+    // Only reload the source if it's actually different
+    if (!isSameSource) {
       setViewTracked(false);
       // Reset first toggle state only when loading a new video
       isFirstToggle.current = true;
@@ -361,9 +364,30 @@ function VideoPlayerComponent({
       // Force the time to be at the beginning for new episodes
       video.currentTime = 0;
     } else {
-      // Keep the current time position if just reloading the same video
+      // Keep the current time position if just reinitializing the same video
       setProgress((currentTimePosition / duration) * 100);
       setCurrentTime(currentTimePosition);
+      
+      // Optimization: If it's the same source, we don't need to reload
+      // Skip the reload and just set the player state
+      isInitializing.current = false;
+      setIsLoading(false);
+      
+      console.log('Same video source detected, skipping reload');
+      
+      // We still need to ensure view tracking works
+      if (!viewTracked) {
+        apiRequest(`/api/animes/${animeId}/view`, { method: 'POST' })
+          .then(response => {
+            console.log('View tracked for anime:', animeId, response);
+            setViewTracked(true);
+          })
+          .catch(error => {
+            console.error('Failed to track view:', error);
+          });
+      }
+      
+      return () => {};
     }
     
     console.log('Initializing player with URL:', securedVideoUrl, 
@@ -562,7 +586,6 @@ function VideoPlayerComponent({
     
     console.log('Toggle play called, current state:', video.paused ? 'paused' : 'playing');
     console.log('Current time:', video.currentTime);
-    console.log('Is first toggle:', isFirstToggle.current);
     
     // Always use the actual video state rather than React state
     // This ensures we're responding to the actual DOM element state
@@ -584,21 +607,16 @@ function VideoPlayerComponent({
         // Now we're no longer on first toggle
         isFirstToggle.current = false;
         
+        // Play without reload
         video.play().catch(err => {
           // Handle autoplay restrictions gracefully
           console.warn('Playback failed, likely due to autoplay restrictions:', err);
           // Make sure the UI state reflects the actual video state
           setIsPlaying(false);
-        }).then(() => {
-          if (!video) return;
-          
-          // Verify we're still at the expected position
-          if (Math.abs(video.currentTime - currentPosition) > 1 && currentPosition > 1) {
-            console.log('Correcting time position after play', 
-              'from', video.currentTime, 'to', currentPosition);
-            video.currentTime = currentPosition;
-          }
         });
+        
+        // Don't try to reload video here - this is the key fix for the reload issue
+        
       } catch (err) {
         console.error('Error in togglePlay (play):', err);
         setIsPlaying(false);
@@ -623,6 +641,8 @@ function VideoPlayerComponent({
           'from', video.currentTime, 'to', currentPosition);
         video.currentTime = currentPosition;
       }
+      
+      // Don't try to reload video here - this is the key fix for the reload issue
     }
   }, []);
   
@@ -660,17 +680,30 @@ function VideoPlayerComponent({
     }
   }, [isMuted, volume]);
   
+  // Track whether user is dragging the progress bar
+  const isDraggingProgressBar = useRef(false);
+  // Store playing state when drag started
+  const wasPlayingBeforeDrag = useRef(false);
+  
   // Handle progress bar interactions - immediate response
   const handleProgressChange = useCallback((value: number[]) => {
     const newProgress = value[0];
     console.log('Progress change:', newProgress);
     
+    // Mark that we're dragging the progress bar
+    isDraggingProgressBar.current = true;
+    
     // Prevent operations if video not ready
     if (!videoRef.current || duration <= 0) return;
     
-    // Set loading and seeking states immediately when user interacts with slider
-    setIsSeeking(true);
-    setIsLoading(true);
+    // Remember if video was playing before the drag (only on first progress update)
+    if (!wasPlayingBeforeDrag.current) {
+      wasPlayingBeforeDrag.current = isPlaying && !videoRef.current.paused;
+      console.log('Saving play state before drag:', wasPlayingBeforeDrag.current);
+      
+      // Don't pause the video immediately for better UX
+      // We'll only pause on actual seek
+    }
     
     // Calculate the new time position in seconds
     const newTime = (newProgress / 100) * duration;
@@ -683,6 +716,11 @@ function VideoPlayerComponent({
     setCurrentTime(newTime);
     
     try {
+      // Set seeking state to improve visual feedback
+      setIsSeeking(true);
+      
+      // Don't set loading state yet to avoid flicker during small adjustments
+      
       // Actually set the video time with more reliable direct access
       const video = videoRef.current;
       
@@ -711,32 +749,103 @@ function VideoPlayerComponent({
       });
     } catch (err) {
       console.error('Error in seek operation:', err);
+      setIsSeeking(false);
     }
-  }, [duration, videoRef]);
+  }, [duration, isPlaying]);
   
   const handleSkipBackward = useCallback(() => {
     if (videoRef.current) {
       // Update the current time by skipping backward 5 seconds
-      const newTime = Math.max(0, videoRef.current.currentTime - 5);
-      videoRef.current.currentTime = newTime;
-      // Update current time state to trigger UI update
-      setCurrentTime(newTime);
-      // Force a progress update to keep UI in sync
-      const newProgress = (newTime / duration) * 100;
-      setProgress(newProgress);
+      const video = videoRef.current;
+      const newTime = Math.max(0, video.currentTime - 5);
+      
+      try {
+        // Log for debugging
+        console.log('Skipping backward - current:', video.currentTime, 'new:', newTime);
+        
+        // Set loading and seeking states
+        setIsLoading(true);
+        setIsSeeking(true);
+        
+        // Update UI immediately for responsive feel
+        setProgress((newTime / duration) * 100);
+        setCurrentTime(newTime);
+        
+        // Directly set the time on the video element - most reliable method
+        video.currentTime = newTime;
+        
+        // Double-check that our seek worked
+        setTimeout(() => {
+          if (videoRef.current) {
+            const actualTime = videoRef.current.currentTime;
+            if (Math.abs(actualTime - newTime) > 0.5) {
+              console.log('Correcting backward seek:', 
+                          'intended:', newTime, 
+                          'actual:', actualTime);
+              
+              // Force the time again
+              videoRef.current.currentTime = newTime;
+            }
+          }
+          
+          // Reset states regardless
+          setIsLoading(false);
+          setIsSeeking(false);
+        }, 300);
+      } catch (err) {
+        console.error('Error in skip backward operation:', err);
+        // Ensure we reset the loading state
+        setIsLoading(false);
+        setIsSeeking(false);
+      }
     }
   }, [duration]);
   
   const handleSkipForward = useCallback(() => {
     if (videoRef.current) {
       // Update the current time by skipping forward 5 seconds
-      const newTime = Math.min(duration, videoRef.current.currentTime + 5);
-      videoRef.current.currentTime = newTime;
-      // Update current time state to trigger UI update
-      setCurrentTime(newTime);
-      // Force a progress update to keep UI in sync
-      const newProgress = (newTime / duration) * 100;
-      setProgress(newProgress);
+      const video = videoRef.current;
+      const newTime = Math.min(duration, video.currentTime + 5);
+      
+      try {
+        // Log for debugging
+        console.log('Skipping forward - current:', video.currentTime, 'new:', newTime);
+        
+        // Set loading and seeking states
+        setIsLoading(true);
+        setIsSeeking(true);
+        
+        // Update UI immediately for responsive feel
+        setProgress((newTime / duration) * 100);
+        setCurrentTime(newTime);
+        
+        // Directly set the time on the video element - most reliable method
+        video.currentTime = newTime;
+        
+        // Double-check that our seek worked
+        setTimeout(() => {
+          if (videoRef.current) {
+            const actualTime = videoRef.current.currentTime;
+            if (Math.abs(actualTime - newTime) > 0.5) {
+              console.log('Correcting forward seek:', 
+                          'intended:', newTime, 
+                          'actual:', actualTime);
+              
+              // Force the time again
+              videoRef.current.currentTime = newTime;
+            }
+          }
+          
+          // Reset states regardless
+          setIsLoading(false);
+          setIsSeeking(false);
+        }, 300);
+      } catch (err) {
+        console.error('Error in skip forward operation:', err);
+        // Ensure we reset the loading state
+        setIsLoading(false);
+        setIsSeeking(false);
+      }
     }
   }, [duration]);
   
@@ -786,83 +895,136 @@ function VideoPlayerComponent({
     );
   }, []);
   
-  // Keyboard controls
+  // Track when controls are clicked to avoid toggling play/pause
+  const controlsClicked = useRef(false);
+
+  // Keyboard controls - using a specialized handler to fix keyboard input issues
   useEffect(() => {
+    // Create a standalone handler function that won't change with component renders
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Debug logging to help identify keypress detection
+      console.log('Key pressed:', e.key, 'Active element:', document.activeElement?.tagName);
+      
       // Only handle key events if video player is in view/focus
       const videoContainer = containerRef.current;
-      if (!videoContainer || !videoRef.current) return;
+      if (!videoContainer || !videoRef.current) {
+        console.log('Video container or ref not available');
+        return;
+      }
       
-      // Check if video container is at least partially in viewport
-      // This is a more lenient check that works better on mobile devices
+      // Only if the target is not an input element
+      if (e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement) {
+        console.log('Ignoring keypress in input/textarea element');
+        return;
+      }
+      
+      // Check if the video container is visible in the viewport
       try {
         const rect = videoContainer.getBoundingClientRect();
-        const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-        const windowWidth = window.innerWidth || document.documentElement.clientWidth;
         
-        // Consider element in viewport if it's at least partially visible
-        // (More forgiving than requiring it to be fully in viewport)
-        const isPartiallyInViewport = !(
-          rect.bottom < 0 ||
-          rect.top > windowHeight ||
-          rect.right < 0 ||
-          rect.left > windowWidth
-        );
+        // More permissive check - consider visible if at least 30% of the player is in view
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+        const visibleWidth = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
+        const visibleArea = visibleHeight * visibleWidth;
+        const totalArea = rect.width * rect.height;
+        const visiblePercentage = totalArea > 0 ? (visibleArea / totalArea) * 100 : 0;
         
-        // Skip keyboard shortcuts if video isn't even partially visible
-        if (!isPartiallyInViewport) return;
-        
-        // Also check if we're on a mobile device - keyboard events work differently
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // Some mobile browsers have inconsistent keyboard event behavior
-        if (isMobileDevice) {
-          // Be more lenient about keyboard shortcuts on mobile
-          // Allow them to work even if exact viewport conditions aren't met
+        // Debug logging for visibility percentage
+        if (visiblePercentage < 30) {
+          console.log('Video not sufficiently visible: ' + Math.round(visiblePercentage) + '%');
+          return;
         }
       } catch (err) {
         // If there's any error in the viewport calculation, proceed anyway
         console.warn('Error checking viewport:', err);
       }
       
-      // Only if the target is not an input element
-      if (e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
+      let handled = true;
       
       switch (e.key) {
         case ' ': // Spacebar for play/pause
-          e.preventDefault();
+          console.log('Spacebar pressed - toggling play state');
           togglePlay();
           break;
         case 'ArrowRight': // Right arrow for 5s forward
-          e.preventDefault();
+          console.log('Right arrow pressed - skipping forward');
           handleSkipForward();
           break;
         case 'ArrowLeft': // Left arrow for 5s backward
-          e.preventDefault();
+          console.log('Left arrow pressed - skipping backward');
           handleSkipBackward();
           break;
         case 'f': // f for fullscreen
-          e.preventDefault();
+          console.log('F key pressed - toggling fullscreen');
           toggleFullscreen();
           break;
         case 'm': // m for mute
-          e.preventDefault();
+          console.log('M key pressed - toggling mute');
           toggleMute();
           break;
+        default:
+          handled = false;
+      }
+      
+      // Prevent default browser behavior only for the keys we handle
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
     
     // Add event listener for keyboard controls
-    window.addEventListener('keydown', handleKeyDown);
+    console.log('Adding keydown event listener');
+    window.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+    
+    // Also add a click handler on the video container to improve focus handling
+    const handleVideoContainerClick = (e: MouseEvent) => {
+      // When the user clicks on the video, we consider it "in focus" for keyboard events
+      console.log('Video container clicked');
+      
+      // If user clicked on a control, don't toggle play state
+      const target = e.target as HTMLElement;
+      if (target && (
+          target.closest('button') || 
+          target.closest('.slider-root') || 
+          target.closest('.video-controls') ||
+          target.classList.contains('video-controls')
+      )) {
+        controlsClicked.current = true;
+        return;
+      }
+      
+      // If the video itself was clicked (not the controls), toggle play/pause
+      if (!controlsClicked.current) {
+        // Use direct toggle without checking videoRef to avoid double-toggling
+        togglePlay();
+      }
+      
+      // Reset the controls clicked flag
+      setTimeout(() => {
+        controlsClicked.current = false;
+      }, 150);
+    };
+    
+    const videoContainer = containerRef.current;
+    if (videoContainer) {
+      // Remove any existing handler first to avoid duplicates
+      videoContainer.removeEventListener('click', handleVideoContainerClick);
+      // Then add the handler
+      videoContainer.addEventListener('click', handleVideoContainerClick);
+    }
     
     // Cleanup
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      console.log('Removing keydown event listener');
+      window.removeEventListener('keydown', handleKeyDown, true);
+      
+      if (videoContainer) {
+        videoContainer.removeEventListener('click', handleVideoContainerClick);
+      }
     };
-  }, [togglePlay, toggleFullscreen, toggleMute, handleSkipForward, handleSkipBackward, duration]);
+  }, [togglePlay, toggleFullscreen, toggleMute, handleSkipForward, handleSkipBackward]);
   
   // Function to retry loading the video
   const retryPlayback = useCallback(() => {
@@ -932,7 +1094,17 @@ function VideoPlayerComponent({
             ref={videoRef}
             className={`absolute inset-0 w-full h-full cursor-pointer ${hasError ? 'opacity-30' : ''}`}
             poster={poster}
-            onClick={hasError ? undefined : togglePlay}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent multiple toggles from bubbling
+              
+              if (hasError) return;
+              
+              // Don't toggle if we're actually clicking a control
+              if (!controlsClicked.current) {
+                console.log('Video element clicked - toggling play/pause');
+                togglePlay();
+              }
+            }}
             onContextMenu={(e) => { e.preventDefault(); return false; }}
             onCopy={(e) => { e.preventDefault(); return false; }}
             onCut={(e) => { e.preventDefault(); return false; }}
@@ -949,7 +1121,7 @@ function VideoPlayerComponent({
               if (isMobile && !showControls) {
                 setShowControls(true);
                 startControlsTimer();
-              } else {
+              } else if (!controlsClicked.current) {
                 togglePlay();
               }
             }}
@@ -1067,21 +1239,88 @@ function VideoPlayerComponent({
                     onValueChange={handleProgressChange}
                     onValueCommit={(value) => {
                       console.log('Value committed:', value);
+                      
                       // Force an explicit seek when the user finishes dragging
                       if (videoRef.current && duration > 0) {
                         const newProgress = value[0];
                         const newTime = (newProgress / 100) * duration;
                         
-                        // Use setTimeout to ensure the final value is applied
-                        // after any pending state updates
+                        console.log('Committing time change:', newTime);
+                        
+                        // Use our stored flag to know if video was playing before
+                        const shouldResumePlaying = wasPlayingBeforeDrag.current;
+                        console.log('Should resume playing after commit:', shouldResumePlaying);
+                        
+                        // Show loading state only during the final seek
+                        setIsLoading(true);
+                        
+                        // Set the time directly with a reference to the video element
+                        videoRef.current.currentTime = newTime;
+                        
+                        // Verify seek was successful and handle playback resume
                         setTimeout(() => {
                           if (videoRef.current) {
-                            videoRef.current.currentTime = newTime;
-                            setCurrentTime(newTime);
-                            setProgress(newProgress);
+                            const actualTime = videoRef.current.currentTime;
+                            
+                            // If there's a significant difference, try one more time
+                            if (Math.abs(actualTime - newTime) > 0.5) {
+                              console.log('Correcting final seek:', 
+                                        'intended:', newTime, 
+                                        'actual:', actualTime);
+                              
+                              // Try again to set the time
+                              videoRef.current.currentTime = newTime;
+                            }
+                            
+                            // Reset all drag-related state
+                            setIsSeeking(false);
+                            setIsLoading(false);
+                            isDraggingProgressBar.current = false;
+                            
+                            // Resume playback if it was playing before drag started
+                            if (shouldResumePlaying) {
+                              console.log('Resuming playback after drag completion');
+                              
+                              // Force React state to match actual player state
+                              setIsPlaying(true);
+                              
+                              // Play the video
+                              videoRef.current.play().catch(e => {
+                                console.warn('Could not resume playback after seeking:', e);
+                                // Update state if play fails
+                                setIsPlaying(false);
+                              });
+                            }
+                            
+                            // Reset the stored state for next time
+                            wasPlayingBeforeDrag.current = false;
                           }
-                        }, 0);
+                        }, 200);
                       }
+                    }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); // Prevent video container click
+                      
+                      // Tell controls click handler this is a control interaction
+                      controlsClicked.current = true;
+                      
+                      // Record if video is currently playing (only once per drag operation)
+                      if (!isDraggingProgressBar.current && videoRef.current) {
+                        wasPlayingBeforeDrag.current = isPlaying && !videoRef.current.paused;
+                        console.log('Mouse down on slider, current play state:', 
+                                   wasPlayingBeforeDrag.current ? 'playing' : 'paused');
+                      }
+                      
+                      // Mark that we're dragging (mouseDown happens before first onValueChange)
+                      isDraggingProgressBar.current = true;
+                    }}
+                    onMouseUp={(e) => {
+                      e.stopPropagation(); // Prevent video container click
+                      
+                      // Note: We don't resume playback here because that's handled
+                      // in the onValueCommit handler to ensure proper seeking completion
+                      
+                      console.log('Mouse up on slider, deferring to onValueCommit for playback');
                     }}
                     aria-label="Seek video"
                   />
@@ -1096,7 +1335,14 @@ function VideoPlayerComponent({
                     variant="ghost"
                     size="sm"
                     className="text-white hover:bg-white/10 rounded-full h-9 w-9 p-0"
-                    onClick={togglePlay}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent video container click
+                      togglePlay();
+                    }}
+                    onMouseDown={(e) => {
+                      controlsClicked.current = true;
+                      e.stopPropagation();
+                    }}
                     title={isPlaying ? "Pause" : "Play"}
                   >
                     {isPlaying ? (
@@ -1111,7 +1357,14 @@ function VideoPlayerComponent({
                     variant="ghost"
                     size="sm"
                     className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
-                    onClick={handleSkipBackward}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent video container click
+                      handleSkipBackward();
+                    }}
+                    onMouseDown={(e) => {
+                      controlsClicked.current = true;
+                      e.stopPropagation();
+                    }}
                   >
                     <SkipBack className="h-4 w-4" />
                   </Button>
@@ -1120,7 +1373,14 @@ function VideoPlayerComponent({
                     variant="ghost"
                     size="sm"
                     className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
-                    onClick={handleSkipForward}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent video container click
+                      handleSkipForward();
+                    }}
+                    onMouseDown={(e) => {
+                      controlsClicked.current = true;
+                      e.stopPropagation();
+                    }}
                   >
                     <SkipForward className="h-4 w-4" />
                   </Button>
