@@ -143,11 +143,11 @@ function VideoPlayerComponent({
       const video = videoRef.current;
       if (video) {
         progressIntervalRef.current = window.setInterval(() => {
-          if (video && video.duration > 0) {
+          if (video && !video.paused && video.duration > 0) {
             setCurrentTime(video.currentTime);
             setProgress((video.currentTime / video.duration) * 100);
           }
-        }, 100); // Update 10 times per second for smoother progress
+        }, 60); // Update about 16 times per second for smooth progress
         console.log('Started continuous progress updates');
       }
     }
@@ -368,13 +368,13 @@ function VideoPlayerComponent({
     const video = videoRef.current;
     if (!video) return;
     
-    // Create a new interval that runs every 40ms for smooth updates (25 fps)
+    // Create a new interval that runs every 60ms for smooth updates (around 16-17 fps)
     progressIntervalRef.current = window.setInterval(() => {
-      if (video && video.duration > 0) {
+      if (video && !video.paused && video.duration > 0) {
         setCurrentTime(video.currentTime);
         setProgress((video.currentTime / video.duration) * 100);
       }
-    }, 40);
+    }, 60);
     
     console.log('Started continuous progress updates');
   }, []);
@@ -397,9 +397,6 @@ function VideoPlayerComponent({
     if (isInitializing.current) return () => {};
     
     isInitializing.current = true;
-    
-    // Start progress updates whenever we initialize the player
-    startProgressUpdates();
     
     const video = videoRef.current;
     if (!video) {
@@ -506,14 +503,6 @@ function VideoPlayerComponent({
     video.addEventListener('loadeddata', onLoadedData);
     video.addEventListener('seeking', onSeeking);
     video.addEventListener('seeked', onSeeked);
-    
-    // Make sure video has proper click handling - important for mobile
-    video.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent double-firing
-      
-      // Toggle play/pause on direct video click
-      togglePlay();
-    });
     
     // Set the source and load the video
     if (video.src !== securedVideoUrl) {
@@ -1203,11 +1192,19 @@ function VideoPlayerComponent({
               
               // Don't toggle if we're actually clicking a control
               if (!controlsClicked.current) {
-                console.log('Video container clicked');
-                togglePlay();
-              } else {
-                // Reset this flag so next click works
+                console.log('Video element clicked - toggling play/pause');
+                
+                // This is the fix - update UI state before toggling
+                // Update React state to match what will happen in togglePlay
+                if (videoRef.current) {
+                  // If paused, we'll play, if playing, we'll pause
+                  setIsPlaying(videoRef.current.paused);
+                }
+                
+                // Ensure proper control state
                 controlsClicked.current = false;
+                
+                togglePlay();
               }
             }}
             onContextMenu={(e) => { e.preventDefault(); return false; }}
