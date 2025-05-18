@@ -151,8 +151,8 @@ function VideoPlayerComponent({
     setIsLoading(false);
   }, []);
   
-  // Throttle time updates to reduce state changes
-  const onVideoTimeUpdate = useCallback(throttle(() => {
+  // Update time and progress - ensure continuous updates during playback
+  const onVideoTimeUpdate = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     
@@ -163,17 +163,26 @@ function VideoPlayerComponent({
       return;
     }
     
-    // Update time and progress in the UI
-    setCurrentTime(video.currentTime);
-    const newProgress = (video.currentTime / video.duration) * 100;
+    // Get current values directly from the video element
+    const currentVideoTime = video.currentTime;
+    const currentVideoDuration = video.duration;
+    const newProgress = (currentVideoTime / currentVideoDuration) * 100;
+    
+    // Update state directly - don't use requestAnimationFrame which might delay updates
+    setCurrentTime(currentVideoTime);
     setProgress(newProgress);
     
-    // Save to watch history every 5 seconds
-    if (Math.round(video.currentTime) % 5 === 0) {
+    // Log current position for debugging - remove in production
+    if (Math.round(currentVideoTime) % 30 === 0) {
+      console.log('Progress update:', newProgress.toFixed(1) + '%', 'Time:', currentVideoTime.toFixed(1) + 's');
+    }
+    
+    // Save to watch history every 5 seconds - throttle this operation only
+    if (Math.round(currentVideoTime) % 5 === 0) {
       saveToWatchHistory({
         animeId,
         episodeId,
-        timestamp: video.currentTime,
+        timestamp: currentVideoTime,
         progress: newProgress,
         lastWatched: new Date().toISOString(),
       });
@@ -182,7 +191,7 @@ function VideoPlayerComponent({
         onProgress(newProgress);
       }
     }
-  }, 250), [animeId, episodeId, onProgress]);
+  }, [animeId, episodeId, onProgress]);
   
   const onVideoLoadedMetadata = useCallback(() => {
     const video = videoRef.current;
@@ -342,6 +351,14 @@ function VideoPlayerComponent({
       return () => {};
     }
     
+    // Force timer for updating UI even if timeupdate events are not frequent enough
+    const progressUpdateInterval = setInterval(() => {
+      if (video && !video.paused && video.duration > 0) {
+        setCurrentTime(video.currentTime);
+        setProgress((video.currentTime / video.duration) * 100);
+      }
+    }, 100); // Update every 100ms for smooth progress
+    
     // Remember current position if we're reloading the same video
     const wasPlaying = isPlaying;
     const currentTimePosition = video.currentTime || 0;
@@ -500,7 +517,9 @@ function VideoPlayerComponent({
         if (controlsTimerRef.current) {
           clearTimeout(controlsTimerRef.current);
         }
-      }
+      },
+      // Clear progress update interval
+      () => clearInterval(progressUpdateInterval)
     );
   }, [
     securedVideoUrl,
@@ -772,7 +791,7 @@ function VideoPlayerComponent({
     if (videoRef.current) {
       // Update the current time by skipping backward 5 seconds
       const video = videoRef.current;
-      const newTime = Math.max(0, video.currentTime - 5);
+      const newTime = Math.max(0, video.currentTime - 10);
       
       try {
         // Log for debugging
@@ -806,7 +825,7 @@ function VideoPlayerComponent({
           // Reset states regardless
           setIsLoading(false);
           setIsSeeking(false);
-        }, 300);
+        }, 100); // Reduced timeout for better responsiveness
       } catch (err) {
         console.error('Error in skip backward operation:', err);
         // Ensure we reset the loading state
@@ -818,9 +837,9 @@ function VideoPlayerComponent({
   
   const handleSkipForward = useCallback(() => {
     if (videoRef.current) {
-      // Update the current time by skipping forward 5 seconds
+      // Update the current time by skipping forward 10 seconds
       const video = videoRef.current;
-      const newTime = Math.min(duration, video.currentTime + 5);
+      const newTime = Math.min(duration, video.currentTime + 10);
       
       try {
         // Log for debugging
@@ -854,7 +873,7 @@ function VideoPlayerComponent({
           // Reset states regardless
           setIsLoading(false);
           setIsSeeking(false);
-        }, 300);
+        }, 100); // Reduced timeout for better responsiveness
       } catch (err) {
         console.error('Error in skip forward operation:', err);
         // Ensure we reset the loading state
@@ -1132,6 +1151,9 @@ function VideoPlayerComponent({
                   setIsPlaying(videoRef.current.paused);
                 }
                 
+                // Ensure proper control state
+                controlsClicked.current = false;
+                
                 togglePlay();
               }
             }}
@@ -1252,8 +1274,15 @@ function VideoPlayerComponent({
                     handleProgressChange([safePercentage]);
                   }}
                 >
+                  {/* Buffered content indicator */}
                   <div 
-                    className="absolute top-0 left-0 h-full bg-primary rounded-r-full shadow-lg" 
+                    className="absolute top-0 left-0 h-full bg-gray-500/40 rounded-r-full" 
+                    style={{ width: `${Math.min((currentTime / duration) * 110, 100)}%` }}
+                  ></div>
+                  
+                  {/* Custom progress bar that fills as the video plays */}
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-primary rounded-r-full shadow-lg z-0" 
                     style={{ width: `${progress}%` }}
                   >
                     {/* Rounded cap at the end of the progress bar with pop-out effect */}
@@ -1265,6 +1294,8 @@ function VideoPlayerComponent({
                       }}
                     ></div>
                   </div>
+                  
+                  {/* Interactive slider with transparent track for user interaction */}
                   <Slider
                     value={[progress]}
                     min={0}
@@ -1372,6 +1403,13 @@ function VideoPlayerComponent({
                     className="text-white hover:bg-white/10 rounded-full h-9 w-9 p-0"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent video container click
+                      
+                      // Sync UI state before we toggle
+                      if (videoRef.current) {
+                        setIsPlaying(videoRef.current.paused);
+                      }
+                      
+                      // Then toggle play state
                       togglePlay();
                     }}
                     onMouseDown={(e) => {
@@ -1394,6 +1432,9 @@ function VideoPlayerComponent({
                     className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent video container click
+                      // Ensure control is marked as clicked
+                      controlsClicked.current = true;
+                      // Apply backward skip
                       handleSkipBackward();
                     }}
                     onMouseDown={(e) => {
@@ -1410,6 +1451,9 @@ function VideoPlayerComponent({
                     className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent video container click
+                      // Ensure control is marked as clicked
+                      controlsClicked.current = true;
+                      // Apply forward skip
                       handleSkipForward();
                     }}
                     onMouseDown={(e) => {
