@@ -358,10 +358,10 @@ export default function AnimePage({ params }: AnimePageProps) {
             </h2>
           </div>
           
-          {/* Responsive layout - stacked on mobile, side-by-side on desktop */}
-          <div id="videoPlayerContainer" className="flex flex-col md:flex-row md:h-[500px] gap-6 mb-12">
-            {/* Video Player (full width on mobile, 2/3 on desktop) */}
-            <div className="w-full md:w-[calc(80%-60px)] md:h-full">
+          {/* Responsive layout - stacked on mobile and tablet, side-by-side on desktop */}
+          <div id="videoPlayerContainer" className="flex flex-col lg:flex-row lg:h-[500px] gap-6 mb-12">
+            {/* Video Player (full width on mobile/tablet, 2/3 on desktop) */}
+            <div className="w-full lg:w-[calc(80%-60px)] lg:h-full md:min-h-[450px]">
               <VideoPlayer
                 // Add a key prop with the episode ID to force the component to remount when the episode changes
                 key={`video-player-${currentEpisode.id}`}
@@ -371,12 +371,12 @@ export default function AnimePage({ params }: AnimePageProps) {
                 animeId={anime.id}
                 episodeId={currentEpisode.id}
                 onEnded={handleEpisodeEnded}
-                className="md:h-full"
+                className="lg:h-full"
               />
             </div>
             
-            {/* Right side: Episodes List (hidden on mobile, vertical list on desktop) */}
-            <div className="hidden md:block md:w-[calc(20%+60px)] bg-background/50 rounded-md flex flex-col h-full">
+            {/* Episodes List (hidden on mobile, below video on tablet, right side on desktop) */}
+            <div className="hidden md:flex lg:w-[calc(20%+60px)] bg-background/50 rounded-md flex-col md:h-[300px] lg:h-full">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h2 className="font-bold text-sm">EPS 1-{anime.episodes.length}</h2>
@@ -395,7 +395,7 @@ export default function AnimePage({ params }: AnimePageProps) {
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto side-panel py-2 max-h-[380px]">
+              <div className="flex-1 overflow-y-auto side-panel py-2 max-h-[380px] md:max-h-[calc(100%-40px)] md:min-h-0">
                 {anime.episodes.slice(0, 50).map((episode) => (
                   <Link key={episode.id} href={`/anime/${anime.id}/episode/${episode.id}`} onClick={(e) => {
                     e.preventDefault();
@@ -436,7 +436,7 @@ export default function AnimePage({ params }: AnimePageProps) {
           </div>
           
           {/* Episodes List - Mobile Only */}
-          <div className="md:hidden mb-8">
+          <div className="lg:hidden md:hidden mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white dark:text-white" style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>Episodes</h2>
               {anime.episodes.length > 12 && (

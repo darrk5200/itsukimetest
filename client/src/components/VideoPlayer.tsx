@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
-import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Maximize, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Maximize, AlertTriangle, RefreshCw, Lock, X } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { formatDuration } from '@/lib/utils';
@@ -55,6 +55,7 @@ function VideoPlayerComponent({
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [viewTracked, setViewTracked] = useState(false);
+  const [showMobileVolumeControls, setShowMobileVolumeControls] = useState(false);
   const { toast } = useToast();
   
   // State for secured video URL with token
@@ -663,6 +664,20 @@ function VideoPlayerComponent({
   }, 50), []);
   
   const toggleMute = useCallback(() => {
+    // On mobile, toggle the volume controls panel instead of muting directly
+    if (isMobile) {
+      setShowMobileVolumeControls(prev => !prev);
+      
+      // Auto-hide volume controls after 3 seconds
+      if (!showMobileVolumeControls) {
+        setTimeout(() => {
+          setShowMobileVolumeControls(false);
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Default behavior for desktop
     if (videoRef.current) {
       if (isMuted) {
         videoRef.current.volume = volume;
@@ -678,7 +693,7 @@ function VideoPlayerComponent({
         });
       }
     }
-  }, [isMuted, volume]);
+  }, [isMuted, volume, isMobile, showMobileVolumeControls]);
   
   // Track whether user is dragging the progress bar
   const isDraggingProgressBar = useRef(false);
@@ -997,7 +1012,14 @@ function VideoPlayerComponent({
       
       // If the video itself was clicked (not the controls), toggle play/pause
       if (!controlsClicked.current) {
-        // Use direct toggle without checking videoRef to avoid double-toggling
+        // This is the main fix - explicitly update UI before toggling
+        if (videoRef.current) {
+          // Update React state to match what will happen in togglePlay
+          // This ensures the play/pause button icon matches the state
+          setIsPlaying(videoRef.current.paused);
+        }
+        
+        // Toggle playback state
         togglePlay();
       }
       
@@ -1069,7 +1091,7 @@ function VideoPlayerComponent({
   return (
     <div 
       ref={containerRef}
-      className={`video-container relative bg-black rounded-lg overflow-hidden shadow-xl ${className}`}
+      className={`video-container relative bg-black rounded-lg overflow-hidden shadow-xl md:min-h-[400px] ${className}`}
       style={{ 
         paddingBottom: className?.includes('md:h-full') && !isMobile ? '0' : '56.25%', 
         height: className?.includes('md:h-full') && !isMobile ? '100%' : undefined
@@ -1102,6 +1124,14 @@ function VideoPlayerComponent({
               // Don't toggle if we're actually clicking a control
               if (!controlsClicked.current) {
                 console.log('Video element clicked - toggling play/pause');
+                
+                // This is the fix - update UI state before toggling
+                // Update React state to match what will happen in togglePlay
+                if (videoRef.current) {
+                  // If paused, we'll play, if playing, we'll pause
+                  setIsPlaying(videoRef.current.paused);
+                }
+                
                 togglePlay();
               }
             }}
@@ -1122,6 +1152,11 @@ function VideoPlayerComponent({
                 setShowControls(true);
                 startControlsTimer();
               } else if (!controlsClicked.current) {
+                // Update UI state before toggling on mobile
+                if (videoRef.current) {
+                  setIsPlaying(videoRef.current.paused);
+                }
+                
                 togglePlay();
               }
             }}
@@ -1328,7 +1363,7 @@ function VideoPlayerComponent({
               </div>
               
               {/* Control buttons */}
-              <div className="flex items-center justify-between px-1">
+              <div className="flex items-center justify-between px-1 py-2">
                 <div className="flex items-center space-x-3">
                   {/* Play/Pause button */}
                   <Button
@@ -1391,7 +1426,24 @@ function VideoPlayerComponent({
                       variant="ghost"
                       size="sm"
                       className="text-white hover:bg-white/10 rounded-full h-8 w-8 p-0"
-                      onClick={toggleMute}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent video play/pause
+                        
+                        // On mobile, just toggle mute directly
+                        if (isMobile) {
+                          if (isMuted || volume === 0) {
+                            setIsMuted(false);
+                            setVolume(0.5);
+                            if (videoRef.current) videoRef.current.volume = 0.5;
+                          } else {
+                            setIsMuted(true);
+                            if (videoRef.current) videoRef.current.volume = 0;
+                          }
+                        } else {
+                          // On desktop, use the regular toggle mute function
+                          toggleMute();
+                        }
+                      }}
                     >
                       {isMuted ? (
                         <VolumeX className="h-4 w-4" />
@@ -1400,20 +1452,21 @@ function VideoPlayerComponent({
                       )}
                     </Button>
                     
-                    <div className="relative w-20 h-8 hidden sm:flex items-center">
-                      <div className="absolute inset-0 w-full h-1 bg-gray-700 rounded-full">
-                        <div 
-                          className="absolute top-0 left-0 h-full bg-primary rounded-full" 
-                          style={{ width: `${isMuted ? 0 : volume * 100}%` }}
-                        ></div>
-                      </div>
+                    {/* Volume slider - simplified with no nested elements */}
+                    <div className="relative w-16 sm:w-20 h-8 flex items-center">
                       <Slider
                         value={[isMuted ? 0 : volume * 100]}
                         min={0}
                         max={100}
-                        step={1}
-                        className="absolute inset-0"
-                        onValueChange={handleVolumeChange}
+                        step={5}
+                        className="touch-slider w-full"
+                        onValueChange={(values) => {
+                          // Stop event propagation 
+                          if (document.activeElement) {
+                            (document.activeElement as HTMLElement).blur();
+                          }
+                          handleVolumeChange(values);
+                        }}
                       />
                     </div>
                   </div>

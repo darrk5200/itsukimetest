@@ -130,6 +130,41 @@
   opacity: 1;
 }
 
+/* Volume Slider Styling - for all devices */
+.touch-slider {
+  height: 24px !important;
+  touch-action: none; /* Prevent scrolling when touching the slider */
+}
+
+.touch-slider [role="slider"] {
+  width: 14px !important;
+  height: 14px !important;
+  background-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.touch-slider [data-orientation="horizontal"] {
+  height: 4px !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Add tap highlight for better touch feedback */
+.video-volume-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile-specific styling */
+@media (max-width: 640px) {
+  .touch-slider {
+    height: 26px !important;
+  }
+  
+  .touch-slider [role="slider"] {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
 .progress-bar {
   cursor: pointer;
   height: 4px;
@@ -247,6 +282,31 @@
 .mobile-episode-scroll::-webkit-scrollbar-thumb {
   background: hsl(var(--primary));
   border-radius: 2px;
+}
+
+/* Tablet specific styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Ensure episodes list is visible and properly sized on tablets */
+  .side-panel {
+    min-height: 0;
+    max-height: 250px !important;
+    overflow-y: auto !important;
+    display: block !important;
+  }
+  
+  /* Make the episode panel appear below the video player */
+  #videoPlayerContainer {
+    display: flex;
+    flex-direction: column !important;
+  }
+  
+  /* Adjust the episode container for tablet view */
+  #videoPlayerContainer > div:last-child {
+    width: 100% !important;
+    margin-top: 16px;
+    display: flex !important;
+    flex-direction: column !important;
+  }
 }
 
 @media (max-width: 768px) {
