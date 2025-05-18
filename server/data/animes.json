@@ -299,5 +299,68 @@
         "duration": 1440
       }
     ]
+  },
+  {
+    "id": 6,
+    "anime_name": "Charlotte",
+    "coverpage": "https://image.tmdb.org/t/p/w1280/k4HvQUklsGE9ii9eBZIN1Y02Iyj.jpg",
+    "episode_count": 13,
+    "releasedEpisodes": 1,
+    "releaseDate": "2015-05-07",
+    "genres": ["Comedy","Drama","Romance","School","Sci-Fi"],
+    "description": "All thanks to the special ability that he developed, Yuu was able to cheat his way into a very prestigious high school. With his power, he thought nothing was going to stand in his way, until he met a mysterious girl named Nao Tomori and other students with special abilities just like him. It was the beginning to a new life.",
+    "lastEpisodeTimestamp": "2025-05-18T12:31:00+06:00",
+    "artworks": [
+      "https://artworks.thetvdb.com/banners/graphical/289679-g2.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-6.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-4.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-1.jpg",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-1.jpg",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-3.jpg",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-2.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-5.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-7.jpg",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-6.jpg",
+      "https://artworks.thetvdb.com/banners/v4/series/289679/icons/64438afa20864.png",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-5.jpg",
+      "https://artworks.thetvdb.com/banners/fanart/original/289679-7.jpg",
+      "https://artworks.thetvdb.com/banners/posters/289679-8.jpg",
+      "https://artworks.thetvdb.com/banners/seasons/289679-0.jpg",
+      "https://artworks.thetvdb.com/banners/graphical/289679-g3.jpg"
+    ],
+    "episodes": [
+      {
+        "id": 1,
+        "episode_number": 1,
+        "title": "Think of others",
+        "video_url": "https://github.com/itsukihme/x8Jq4LmTzR9WvB1Y/raw/refs/heads/main/x8Jq4LmTzR9WvB1Y_01.mp4",
+        "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/emaHs6uvIRs2njmY6khRZPXFuvF.jpg",
+        "duration": 1532
+      },
+      {
+        "id": 2,
+        "episode_number": 2,
+        "title": "Melody of Despair",
+        "video_url": "https://github.com/itsukihme/x8Jq4LmTzR9WvB1Y/raw/refs/heads/main/x8Jq4LmTzR9WvB1Y_02.mp4",
+        "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/dGebUNa84OexUUDoYZtehZj5Q4K.jpg",
+        "duration": 1442
+      },
+      {
+        "id": 3,
+        "episode_number": 3,
+        "title": "Love and flame",
+        "video_url": "https://github.com/itsukihme/x8Jq4LmTzR9WvB1Y/raw/refs/heads/main/x8Jq4LmTzR9WvB1Y_03.mp4",
+        "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/8p9ANM3dxRsdzh6d6KciwYxzO89.jpg",
+        "duration": 1442
+      },
+      {
+        "id": 4,
+        "episode_number": 4,
+        "title": "Moment of Earnest",
+        "video_url": "https://github.com/itsukihme/x8Jq4LmTzR9WvB1Y/raw/refs/heads/main/x8Jq4LmTzR9WvB1Y_04.mp4",
+        "thumbnail": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/jO6G7DGRJU1SMaOYNNSOgEMuVf7.jpg",
+        "duration": 1442
+      }
+    ]
   }
 ]
